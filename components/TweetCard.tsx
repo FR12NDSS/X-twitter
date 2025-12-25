@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { TweetData } from '../types';
+import { TweetData, User } from '../types';
 import { userService } from '../services/userService';
 import { MOCK_USERS } from '../utils/mockData';
 import { VerifiedBadge } from './VerifiedBadge';
@@ -7,11 +7,12 @@ import { formatText } from '../utils/textUtils';
 import { 
   Building, Crown, PlayCircle, CalendarClock, MoreHorizontal, Frown, 
   UserMinus, UserPlus, BarChart2, MessageCircle, Repeat2, PenLine, Heart, 
-  Share, Link, Bookmark, Megaphone, Undo2 
+  Share, Link, Bookmark, Megaphone, Undo2, Pin
 } from 'lucide-react';
 
 interface TweetCardProps {
   tweet: TweetData;
+  currentUser?: User | null; // Added to check admin status
   onReply?: (tweet: TweetData) => void;
   onClick?: (tweet: TweetData) => void;
   onBookmark?: (tweetId: string) => void;
@@ -19,9 +20,10 @@ interface TweetCardProps {
   onAnalytics?: (tweet: TweetData) => void;
   onHashtagClick?: (tag: string) => void;
   onUserClick?: (handle: string) => void;
+  onPin?: (tweetId: string, type: 'user' | 'admin') => void; // New pin handler
 }
 
-export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick }) => {
+export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick, onPin }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(tweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
@@ -58,6 +60,15 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
   const isBusiness = tweet.premiumType === 'business';
   const customBadge = isBusiness ? businessBadgeUrl : premiumBadgeUrl;
   const DefaultStatusIcon = isBusiness ? Building : Crown;
+
+  // Pin Logic
+  const isAdminPinned = tweet.isPinned && tweet.pinnedBy === 'admin';
+  const isUserPinned = tweet.isPinned && tweet.pinnedBy === 'user';
+  
+  // Card Styling based on Pin Status
+  const cardBorderClass = isAdminPinned 
+    ? 'border-2 border-red-500 bg-red-900/10' 
+    : 'border-b border-twitter-border';
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -230,6 +241,14 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     setShowMoreMenu(false);
   };
 
+  const handlePinAction = (e: React.MouseEvent, type: 'user' | 'admin') => {
+      e.stopPropagation();
+      if (onPin) {
+          onPin(tweet.id, type);
+      }
+      setShowMoreMenu(false);
+  };
+
   const handleMoreAction = (e: React.MouseEvent, action: 'analytics' | 'not_interested' | 'follow') => {
     e.stopPropagation();
     setShowMoreMenu(false);
@@ -355,8 +374,16 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     <>
         <article 
         onClick={handleCardClick}
-        className="border-b border-twitter-border p-4 hover:bg-white/5 transition-colors cursor-pointer relative"
+        className={`${cardBorderClass} p-4 hover:bg-white/5 transition-colors cursor-pointer relative`}
         >
+        {/* Pinned Label */}
+        {(isAdminPinned || isUserPinned) && (
+            <div className={`flex items-center gap-2 text-xs font-bold mb-2 ml-14 ${isAdminPinned ? 'text-red-500' : 'text-twitter-gray'}`}>
+                <Pin className={`w-3 h-3 fill-current`} />
+                <span>{isAdminPinned ? 'ประกาศจากระบบ' : 'ปักหมุดแล้ว'}</span>
+            </div>
+        )}
+
         <div className="flex gap-4">
             {/* Avatar */}
             <div className="flex-shrink-0" onClick={handleUserClickInternal}>
@@ -402,7 +429,29 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     </button>
                     {/* Dropdown */}
                     {showMoreMenu && (
-                        <div className="absolute top-6 right-0 bg-black border border-twitter-border rounded-xl shadow-[0_0_10px_rgba(255,255,255,0.2)] z-50 w-52 overflow-hidden">
+                        <div className="absolute top-6 right-0 bg-black border border-twitter-border rounded-xl shadow-[0_0_10px_rgba(255,255,255,0.2)] z-50 w-56 overflow-hidden">
+                            {/* Pin Options */}
+                            {currentUser?.isAdmin && (
+                                <div 
+                                    onClick={(e) => handlePinAction(e, 'admin')}
+                                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
+                                >
+                                    <Pin className="w-4 h-4" /> 
+                                    {isAdminPinned ? 'เลิกปักหมุดประกาศ' : 'ปักหมุดประกาศ (Admin)'}
+                                </div>
+                            )}
+                            
+                            {/* User Pin Option (Show if own tweet or generally available logic) */}
+                            {currentUser?.handle === tweet.authorHandle && !isAdminPinned && (
+                                <div 
+                                    onClick={(e) => handlePinAction(e, 'user')}
+                                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
+                                >
+                                    <Pin className="w-4 h-4" /> 
+                                    {isUserPinned ? 'เลิกปักหมุดจากโปรไฟล์' : 'ปักหมุดไปยังโปรไฟล์'}
+                                </div>
+                            )}
+
                             <div 
                                 onClick={(e) => handleMoreAction(e, 'not_interested')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"

@@ -25,6 +25,8 @@ export interface TweetData {
   profileShape?: 'circle' | 'square'; // Profile picture shape
   isScheduled?: boolean;
   isBookmarked?: boolean;
+  isPinned?: boolean; // New: Pin status
+  pinnedBy?: 'user' | 'admin'; // New: Who pinned it
   comments?: TweetComment[];
   quotedTweet?: TweetData; // New property for Quote Tweets
   images?: string[]; // Support for post images

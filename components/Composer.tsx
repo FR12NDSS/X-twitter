@@ -79,7 +79,8 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
         let generatedThumbUrl: string | undefined = undefined;
 
         // Process files
-        for (const file of Array.from(files)) {
+        const fileArray = Array.from(files) as File[];
+        for (const file of fileArray) {
             // Upload the original file
             uploadPromises.push(userService.uploadMedia(file));
 

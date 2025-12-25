@@ -227,6 +227,23 @@ const App: React.FC = () => {
       ));
   };
 
+  const handlePinTweet = (tweetId: string, type: 'user' | 'admin') => {
+      setTweets(prev => prev.map(t => {
+          if (t.id === tweetId) {
+              const currentPinnedState = t.isPinned;
+              const currentPinnedBy = t.pinnedBy;
+              
+              // If already pinned by same type, unpin
+              if (currentPinnedState && currentPinnedBy === type) {
+                  return { ...t, isPinned: false, pinnedBy: undefined };
+              }
+              // Else pin it (overriding previous pin if exists)
+              return { ...t, isPinned: true, pinnedBy: type };
+          }
+          return t;
+      }));
+  };
+
   const refreshFeed = async () => {
     setLoading(true);
     const aiTweets = await generateFeed(currentTrend || undefined);
@@ -371,6 +388,13 @@ const App: React.FC = () => {
       return t;
     }));
   };
+
+  // Sort tweets to ensure Admin Pins are at top
+  const sortedTweets = [...tweets].sort((a, b) => {
+      if (a.pinnedBy === 'admin' && b.pinnedBy !== 'admin') return -1;
+      if (b.pinnedBy === 'admin' && a.pinnedBy !== 'admin') return 1;
+      return 0; // Default sort (usually chronologically inserted in state)
+  });
 
   // --- Render Flow ---
 
@@ -598,10 +622,11 @@ const App: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                tweets.map((tweet) => (
+                sortedTweets.map((tweet) => (
                   <TweetCard 
                     key={tweet.id} 
                     tweet={tweet} 
+                    currentUser={currentUser} // Pass currentUser for admin rights check
                     onReply={handleReplyClick} 
                     onClick={handleViewTweet}
                     onBookmark={handleBookmarkToggle}
@@ -609,6 +634,7 @@ const App: React.FC = () => {
                     onAnalytics={handleAnalyticsClick}
                     onHashtagClick={handleTrendClick}
                     onUserClick={handleUserClick}
+                    onPin={handlePinTweet}
                   />
                 ))
               )}
