@@ -25,22 +25,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
   }, []);
 
   const navItems = [
-    { label: NavigationItem.HOME, icon: Home },
-    { label: NavigationItem.EXPLORE, icon: Search, displayLabel: 'Search' },
-    { label: NavigationItem.NOTIFICATIONS, icon: Bell },
-    { label: NavigationItem.MESSAGES, icon: Mail },
+    { label: NavigationItem.HOME, icon: Home, displayLabel: 'หน้าหลัก' },
+    { label: NavigationItem.EXPLORE, icon: Search, displayLabel: 'ค้นหา' },
+    { label: NavigationItem.NOTIFICATIONS, icon: Bell, displayLabel: 'การแจ้งเตือน' },
+    { label: NavigationItem.MESSAGES, icon: Mail, displayLabel: 'ข้อความ' },
     { label: NavigationItem.GEMINI, icon: Sparkles, displayLabel: 'Gemini' }, // AI Feature
-    { label: NavigationItem.LISTS, icon: FileText },
-    { label: NavigationItem.BOOKMARKS, icon: Bookmark },
-    { label: NavigationItem.COMMUNITIES, icon: Users },
-    { label: NavigationItem.PREMIUM, icon: BadgeCheck, displayLabel: 'Verified' },
-    { label: NavigationItem.PROFILE, icon: User },
-    { label: NavigationItem.SETTINGS, icon: Settings },
+    { label: NavigationItem.LISTS, icon: FileText, displayLabel: 'รายชื่อ' },
+    { label: NavigationItem.BOOKMARKS, icon: Bookmark, displayLabel: 'บุ๊กมาร์ก' },
+    { label: NavigationItem.COMMUNITIES, icon: Users, displayLabel: 'ชุมชน' },
+    { label: NavigationItem.PREMIUM, icon: BadgeCheck, displayLabel: 'ยืนยันตัวตน' },
+    { label: NavigationItem.PROFILE, icon: User, displayLabel: 'ข้อมูลส่วนตัว' },
+    { label: NavigationItem.SETTINGS, icon: Settings, displayLabel: 'การตั้งค่า' },
   ];
 
   // Add Admin item if user is admin
   if (currentUser.isAdmin) {
-      navItems.push({ label: NavigationItem.ADMIN, icon: Shield });
+      navItems.push({ label: NavigationItem.ADMIN, icon: Shield, displayLabel: 'แผงผู้ดูแล' });
   }
 
   const handleLogoutClick = (e: React.MouseEvent) => {
@@ -86,14 +86,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
            <div className="w-7 h-7 border-2 border-white rounded-full flex items-center justify-center">
              <MoreHorizontal className="w-4 h-4 text-white" />
            </div>
-           <span className="hidden xl:block ml-4 text-xl text-white">More</span>
+           <span className="hidden xl:block ml-4 text-xl text-white">เพิ่มเติม</span>
         </button>
       </nav>
 
       {/* Tweet Button */}
       <div className="mb-4">
         <Button size="lg" fullWidth className="hidden xl:block shadow-lg">
-          Post
+          โพสต์
         </Button>
         <div className="xl:hidden w-12 h-12 bg-twitter-accent rounded-full flex items-center justify-center cursor-pointer hover:bg-twitter-hover transition-colors shadow-lg mx-auto">
           <Feather className="w-6 h-6 text-white" />
@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
                     className="w-full text-left px-4 py-3 hover:bg-white/10 flex items-center gap-2 text-white font-bold"
                  >
                     <LogOut className="w-4 h-4" />
-                    Log out @{currentUser.handle}
+                    ออกจากระบบ @{currentUser.handle}
                  </button>
              </div>
         )}

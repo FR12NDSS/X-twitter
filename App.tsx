@@ -20,11 +20,13 @@ import { Premium } from './components/Premium';
 import { GeminiPage } from './components/GeminiPage';
 import { SettingsPage } from './components/SettingsPage';
 import { AdminPage } from './components/AdminPage'; // Import AdminPage
+import { MobileSidebar } from './components/MobileSidebar'; // Import MobileSidebar
 import { AuthPage } from './components/AuthPage';
 import { TweetData, NavigationItem, User, TweetComment } from './types';
 import { generateFeed } from './services/geminiService';
 import { userService } from './services/userService';
-import { Loader2, RefreshCcw, ArrowLeft, MoreVertical } from 'lucide-react';
+import { MOCK_USERS } from './utils/mockData';
+import { Loader2, RefreshCcw, ArrowLeft, MoreVertical, Mic, BadgeDollarSign } from 'lucide-react';
 import { Button } from './components/Button';
 
 const generateMockComments = (tweetId: string): TweetComment[] => [
@@ -58,9 +60,25 @@ const generateMockComments = (tweetId: string): TweetComment[] => [
 ];
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<NavigationItem>(NavigationItem.HOME);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Default to authenticated for demo purposes
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  
+  // Set default tab to ADMIN to show the panel immediately
+  const [activeTab, setActiveTab] = useState<NavigationItem>(NavigationItem.ADMIN);
+  
+  // Initialize with ADMIN user
+  const [currentUser, setCurrentUser] = useState<User | null>({
+      name: 'System Admin',
+      handle: 'admin',
+      avatarUrl: 'https://ui-avatars.com/api/?name=System+Admin&background=0D8ABC&color=fff',
+      bio: 'Official System Administrator',
+      joinedDate: 'Joined Jan 2024',
+      following: 0,
+      followers: 0,
+      isVerified: true,
+      isAdmin: true
+  });
+
   const [tweets, setTweets] = useState<TweetData[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -69,6 +87,7 @@ const App: React.FC = () => {
 
   // Navigation State
   const [selectedTweet, setSelectedTweet] = useState<TweetData | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Mobile Drawer State
 
   // Modal States
   const [replyModalOpen, setReplyModalOpen] = useState(false);
@@ -78,12 +97,16 @@ const App: React.FC = () => {
   const [statsModalOpen, setStatsModalOpen] = useState(false);
   const [analyzingTweet, setAnalyzingTweet] = useState<TweetData | null>(null);
 
-  // Check for existing session on mount
+  // Check for existing session on mount (overrides default demo state if session exists)
   useEffect(() => {
     const sessionUser = userService.getSession();
     if (sessionUser) {
       setCurrentUser(sessionUser);
       setIsAuthenticated(true);
+      // If the session user is admin, allow staying on admin tab, otherwise reset to HOME
+      if (!sessionUser.isAdmin) {
+          setActiveTab(NavigationItem.HOME);
+      }
     }
   }, []);
 
@@ -104,6 +127,7 @@ const App: React.FC = () => {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
+    setActiveTab(NavigationItem.HOME);
   };
 
   const handleLogout = () => {
@@ -112,6 +136,7 @@ const App: React.FC = () => {
     setCurrentUser(null);
     setActiveTab(NavigationItem.HOME);
     setTweets([]);
+    setIsDrawerOpen(false);
   };
 
   const handleTweet = (content: string, scheduledDate?: string) => {
@@ -122,7 +147,7 @@ const App: React.FC = () => {
       authorHandle: currentUser.handle,
       avatarUrl: currentUser.avatarUrl,
       content,
-      timestamp: scheduledDate ? `Scheduled: ${new Date(scheduledDate).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'Just now',
+      timestamp: scheduledDate ? `Scheduled: ${new Date(scheduledDate).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'เมื่อสักครู่',
       likes: 0,
       retweets: 0,
       replies: 0,
@@ -226,7 +251,7 @@ const App: React.FC = () => {
       authorHandle: currentUser.handle,
       avatarUrl: currentUser.avatarUrl,
       content: content,
-      timestamp: 'Just now',
+      timestamp: 'เมื่อสักครู่',
       likes: 0
     };
 
@@ -267,7 +292,7 @@ const App: React.FC = () => {
       authorHandle: currentUser.handle,
       avatarUrl: currentUser.avatarUrl,
       content: content,
-      timestamp: 'Just now',
+      timestamp: 'เมื่อสักครู่',
       likes: 0,
       retweets: 0,
       replies: 0,
@@ -339,6 +364,22 @@ const App: React.FC = () => {
         return <GeminiPage />;
       case NavigationItem.SETTINGS:
         return <SettingsPage currentUser={currentUser} onUpdateUser={handleUpdateProfile} />;
+      case NavigationItem.SPACES: // Placeholder for Spaces
+         return (
+             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                 <Mic className="w-16 h-16 text-twitter-accent mb-4" />
+                 <h2 className="text-2xl font-bold text-white mb-2">Spaces</h2>
+                 <p className="text-twitter-gray">บทสนทนาเสียงสดที่เกิดขึ้นในขณะนี้</p>
+             </div>
+         );
+      case NavigationItem.MONETIZATION: // Placeholder for Monetization
+         return (
+             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                 <BadgeDollarSign className="w-16 h-16 text-green-500 mb-4" />
+                 <h2 className="text-2xl font-bold text-white mb-2">ครีเอเตอร์สตูดิโอ</h2>
+                 <p className="text-twitter-gray">จัดการรายได้และการสมัครสมาชิกของคุณ</p>
+             </div>
+         );
       case NavigationItem.ADMIN:
         // Protect Route
         if (currentUser.isAdmin) {
@@ -363,7 +404,7 @@ const App: React.FC = () => {
                     {/* Left: Avatar (Mobile Only) */}
                     <div className="w-[56px]">
                         <div className="sm:hidden">
-                             <button onClick={() => setActiveTab(NavigationItem.PROFILE)} className="block rounded-full overflow-hidden">
+                             <button onClick={() => setIsDrawerOpen(true)} className="block rounded-full overflow-hidden">
                                <img 
                                  src={currentUser.avatarUrl} 
                                  alt="Profile" 
@@ -388,7 +429,7 @@ const App: React.FC = () => {
                             className="hidden sm:flex h-8 px-3 text-xs font-bold"
                             onClick={() => setActiveTab(NavigationItem.PREMIUM)}
                         >
-                            Upgrade
+                            อัปเกรด
                         </Button>
                          <button onClick={refreshFeed} disabled={loading} className="p-2 -mr-2 text-white rounded-full hover:bg-white/10 transition-colors">
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MoreVertical className="w-5 h-5" />}
@@ -409,17 +450,17 @@ const App: React.FC = () => {
                             <h2 className="text-lg font-bold text-white leading-tight">
                                 {currentTrend}
                             </h2>
-                            <span className="text-xs text-twitter-gray">Trending Topic</span>
+                            <span className="text-xs text-twitter-gray">เทรนด์ฮิต</span>
                         </div>
                     </div>
                 ) : (
                     <div className="flex">
                         <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4 relative">
-                            <span className="font-bold text-white">For you</span>
+                            <span className="font-bold text-white">สำหรับคุณ</span>
                             <div className="absolute bottom-0 h-1 w-14 bg-twitter-accent rounded-full"></div>
                         </div>
                         <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4">
-                            <span className="text-twitter-gray font-medium">Following</span>
+                            <span className="text-twitter-gray font-medium">กำลังติดตาม</span>
                         </div>
                     </div>
                 )}
@@ -434,7 +475,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="w-8 h-8 animate-spin text-twitter-accent mb-4" />
                   <p className="text-twitter-gray">
-                    {currentTrend ? `Finding posts about ${currentTrend}...` : 'Curating your AI feed...'}
+                    {currentTrend ? `กำลังหาโพสต์เกี่ยวกับ ${currentTrend}...` : 'กำลังสร้างฟีด AI ให้คุณ...'}
                   </p>
                 </div>
               ) : (
@@ -470,6 +511,22 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white flex justify-center pb-14 sm:pb-0">
       
+      {/* Mobile Sidebar (Drawer) */}
+      <MobileSidebar 
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        user={currentUser}
+        onNavigate={(item) => {
+            if (item === NavigationItem.HOME && activeTab === NavigationItem.HOME && currentTrend) {
+                handleClearTrend();
+            } else {
+                setActiveTab(item);
+                setSelectedTweet(null);
+            }
+        }}
+        onLogout={handleLogout}
+      />
+
       {/* Reply Modal */}
       <ReplyModal 
         isOpen={replyModalOpen}

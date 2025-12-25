@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Image, Smile, CalendarClock, MapPin, BadgeCheck } from 'lucide-react';
+import { X, Image, Smile, CalendarClock, MapPin } from 'lucide-react';
 import { TweetData, User } from '../types';
 import { Button } from './Button';
 import { MOCK_USERS } from '../utils/mockData';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface ReplyModalProps {
   tweet: TweetData | null;
@@ -95,7 +96,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, isOpen, currentUs
             size="sm" 
             className="font-bold"
           >
-            Reply
+            ตอบกลับ
           </Button>
         </div>
 
@@ -120,7 +121,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, isOpen, currentUs
               </div>
               <p className="text-white text-[15px] mb-3">{tweet.content}</p>
               <div className="text-twitter-gray text-[15px]">
-                Replying to <span className="text-twitter-accent">@{tweet.authorHandle}</span>
+                กำลังตอบกลับ <span className="text-twitter-accent">@{tweet.authorHandle}</span>
               </div>
             </div>
           </div>
@@ -139,7 +140,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, isOpen, currentUs
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                placeholder="Post your reply"
+                placeholder="โพสต์คำตอบของคุณ"
                 className="w-full bg-transparent text-xl text-white placeholder-gray-500 border-none focus:ring-0 resize-none min-h-[120px] p-2 no-scrollbar outline-none mt-1"
               />
               
@@ -156,7 +157,7 @@ export const ReplyModal: React.FC<ReplyModalProps> = ({ tweet, isOpen, currentUs
                             <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-1">
                                     <span className="font-bold text-white text-sm truncate">{user.name}</span>
-                                    {user.isVerified && <BadgeCheck className="w-3 h-3 text-twitter-accent fill-current" />}
+                                    {user.isVerified && <VerifiedBadge className="w-3 h-3 text-twitter-accent fill-current" />}
                                 </div>
                                 <span className="text-twitter-gray text-xs truncate">@{user.handle}</span>
                             </div>

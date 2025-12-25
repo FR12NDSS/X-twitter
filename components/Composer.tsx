@@ -117,7 +117,7 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
             ref={textareaRef}
             value={content}
             onChange={handleContentChange}
-            placeholder="What is happening?!"
+            placeholder="มีอะไรเกิดขึ้นบ้าง?!"
             className="w-full bg-transparent text-xl text-white placeholder-gray-500 border-none focus:ring-0 resize-none h-24 p-2 no-scrollbar outline-none"
           />
           
@@ -149,7 +149,7 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm text-twitter-accent">
                   <CalendarClock className="w-4 h-4" />
-                  <span className="font-medium">Schedule post</span>
+                  <span className="font-medium">กำหนดเวลาโพสต์</span>
                 </div>
                 <button 
                   onClick={toggleScheduler}
@@ -171,28 +171,28 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
           {content && (
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs text-twitter-accent font-semibold flex items-center gap-1">
-                <Wand2 className="w-3 h-3" /> AI Polish:
+                <Wand2 className="w-3 h-3" /> AI ช่วยแต่ง:
               </span>
               <button 
                 onClick={() => handleMagicRefine('funny')}
                 disabled={isRefining}
                 className="text-xs bg-twitter-accent/10 text-twitter-accent px-2 py-1 rounded-full hover:bg-twitter-accent/20 transition-colors disabled:opacity-50"
               >
-                Funny
+                ตลก
               </button>
               <button 
                 onClick={() => handleMagicRefine('professional')}
                 disabled={isRefining}
                 className="text-xs bg-twitter-accent/10 text-twitter-accent px-2 py-1 rounded-full hover:bg-twitter-accent/20 transition-colors disabled:opacity-50"
               >
-                Pro
+                ทางการ
               </button>
               <button 
                 onClick={() => handleMagicRefine('viral')}
                 disabled={isRefining}
                 className="text-xs bg-twitter-accent/10 text-twitter-accent px-2 py-1 rounded-full hover:bg-twitter-accent/20 transition-colors disabled:opacity-50"
               >
-                Viral
+                ไวรัล
               </button>
               {isRefining && <Loader2 className="w-3 h-3 animate-spin text-twitter-accent" />}
             </div>
@@ -269,7 +269,7 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
                 disabled={!content.trim() || isRefining || (showScheduler && !scheduleTime) || isOverLimit} 
                 className="shadow-sm"
               >
-                {showScheduler && scheduleTime ? 'Schedule' : 'Post'}
+                {showScheduler && scheduleTime ? 'กำหนดเวลา' : 'โพสต์'}
               </Button>
             </div>
           </div>

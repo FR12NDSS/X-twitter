@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MessageCircle, Repeat2, Heart, Share, BarChart2, BadgeCheck, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Repeat2, Heart, Share, BarChart2, MoreHorizontal } from 'lucide-react';
 import { TweetData, TweetComment } from '../types';
 import { Button } from './Button';
 import { formatText } from '../utils/textUtils';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface TweetDetailProps {
   tweet: TweetData;
@@ -98,7 +99,7 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
               <div className="flex items-center gap-1">
                 <span className="font-bold text-white">{tweet.authorName}</span>
                 {tweet.isVerified && (
-                  <BadgeCheck className="w-4 h-4 text-twitter-accent fill-current" />
+                  <VerifiedBadge className="w-4 h-4" />
                 )}
               </div>
               <span className="text-twitter-gray">@{tweet.authorHandle}</span>

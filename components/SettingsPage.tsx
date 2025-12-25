@@ -22,7 +22,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
   const [theme, setTheme] = useState<'default' | 'dim' | 'lights-out'>('lights-out');
 
   // Mute Words State
-  const [mutedWords, setMutedWords] = useState<string[]>(['spoilers', 'crypto']);
+  const [mutedWords, setMutedWords] = useState<string[]>(['สปอยล์', 'คริปโต']);
   const [newMuteWord, setNewMuteWord] = useState('');
 
   const handleSaveAccount = () => {
@@ -48,12 +48,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">Account Information</h3>
-              <p className="text-twitter-gray text-sm mb-6">Update your account details and profile information.</p>
+              <h3 className="text-xl font-bold text-white mb-4">ข้อมูลบัญชี</h3>
+              <p className="text-twitter-gray text-sm mb-6">อัปเดตรายละเอียดบัญชีและข้อมูลโปรไฟล์ของคุณ</p>
               
               <div className="space-y-4">
                  <div className="bg-black border border-twitter-border rounded-lg px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray mb-1">Name</label>
+                    <label className="block text-xs text-twitter-gray mb-1">ชื่อ</label>
                     <input 
                         type="text" 
                         value={formData.name} 
@@ -63,7 +63,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                  </div>
                  
                  <div className="bg-black border border-twitter-border rounded-lg px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray mb-1">Username</label>
+                    <label className="block text-xs text-twitter-gray mb-1">ชื่อผู้ใช้</label>
                     <div className="flex">
                         <span className="text-twitter-gray mr-0.5">@</span>
                         <input 
@@ -76,7 +76,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                  </div>
 
                  <div className="bg-black border border-twitter-border rounded-lg px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray mb-1">Bio</label>
+                    <label className="block text-xs text-twitter-gray mb-1">ประวัติโดยย่อ</label>
                     <textarea 
                         value={formData.bio || ''} 
                         onChange={e => setFormData({...formData, bio: e.target.value})}
@@ -85,7 +85,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                  </div>
 
                  <div className="bg-black border border-twitter-border rounded-lg px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray mb-1">Location</label>
+                    <label className="block text-xs text-twitter-gray mb-1">ตำแหน่งที่ตั้ง</label>
                     <input 
                         type="text" 
                         value={formData.location || ''} 
@@ -95,7 +95,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                  </div>
 
                  <div className="bg-black border border-twitter-border rounded-lg px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray mb-1">Website</label>
+                    <label className="block text-xs text-twitter-gray mb-1">เว็บไซต์</label>
                     <input 
                         type="text" 
                         value={formData.website || ''} 
@@ -107,7 +107,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
 
               <div className="mt-8 flex justify-end">
                   <Button onClick={handleSaveAccount} disabled={isSaved}>
-                    {isSaved ? 'Saved!' : 'Save changes'}
+                    {isSaved ? 'บันทึกแล้ว!' : 'บันทึกการเปลี่ยนแปลง'}
                   </Button>
               </div>
             </div>
@@ -117,14 +117,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
       case 'privacy':
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
-             <h3 className="text-xl font-bold text-white mb-4">Privacy and safety</h3>
+             <h3 className="text-xl font-bold text-white mb-4">ความเป็นส่วนตัวและความปลอดภัย</h3>
              
              <div className="space-y-6">
                 <div className="flex items-center justify-between">
                    <div>
-                       <h4 className="text-white font-medium">Protect your posts</h4>
+                       <h4 className="text-white font-medium">ปกป้องโพสต์ของคุณ</h4>
                        <p className="text-sm text-twitter-gray mt-1 max-w-sm">
-                           When selected, your posts and other account information are only visible to people who follow you.
+                           เมื่อเลือกแล้ว โพสต์ของคุณและข้อมูลบัญชีอื่นๆ จะปรากฏแก่คนที่ติดตามคุณเท่านั้น
                        </p>
                    </div>
                    <input 
@@ -137,9 +137,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
 
                 <div className="border-t border-twitter-border pt-6 flex items-center justify-between">
                    <div>
-                       <h4 className="text-white font-medium">Direct Messages</h4>
+                       <h4 className="text-white font-medium">ข้อความส่วนตัว</h4>
                        <p className="text-sm text-twitter-gray mt-1 max-w-sm">
-                           Allow message requests from everyone.
+                           อนุญาตคำขอข้อความจากทุกคน
                        </p>
                    </div>
                    <input 
@@ -150,9 +150,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
 
                 <div className="border-t border-twitter-border pt-6 flex items-center justify-between">
                    <div>
-                       <h4 className="text-white font-medium">Discoverability</h4>
+                       <h4 className="text-white font-medium">การค้นพบ</h4>
                        <p className="text-sm text-twitter-gray mt-1 max-w-sm">
-                           Let people who have your email address find you on BuzzStream.
+                           ให้ผู้ที่มีอีเมลของคุณค้นหาคุณพบบน BuzzStream
                        </p>
                    </div>
                    <input 
@@ -168,7 +168,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
       case 'notifications':
         return (
           <div className="space-y-6 animate-in fade-in duration-300">
-             <h3 className="text-xl font-bold text-white mb-4">Notifications</h3>
+             <h3 className="text-xl font-bold text-white mb-4">การแจ้งเตือน</h3>
              
              <div className="bg-twitter-card rounded-xl overflow-hidden mb-8">
                 <div className="p-4 border-b border-twitter-border/50 flex items-center justify-between hover:bg-white/5 cursor-pointer">
@@ -177,8 +177,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                             <Bell className="w-5 h-5" />
                         </div>
                         <div>
-                            <h4 className="text-white font-medium">Push Notifications</h4>
-                            <p className="text-xs text-twitter-gray">Push notifications to your device</p>
+                            <h4 className="text-white font-medium">การแจ้งเตือนแบบพุช</h4>
+                            <p className="text-xs text-twitter-gray">ส่งการแจ้งเตือนไปยังอุปกรณ์ของคุณ</p>
                         </div>
                     </div>
                     <input 
@@ -194,8 +194,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                             <Monitor className="w-5 h-5" />
                         </div>
                         <div>
-                            <h4 className="text-white font-medium">Email Notifications</h4>
-                            <p className="text-xs text-twitter-gray">Get emails about activity</p>
+                            <h4 className="text-white font-medium">การแจ้งเตือนทางอีเมล</h4>
+                            <p className="text-xs text-twitter-gray">รับอีเมลเกี่ยวกับกิจกรรม</p>
                         </div>
                     </div>
                     <input 
@@ -211,10 +211,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
              <div className="border-t border-twitter-border pt-6">
                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                     <VolumeX className="w-5 h-5" />
-                    Mute words
+                    คำที่ซ่อนไว้
                 </h3>
                 <p className="text-sm text-twitter-gray mb-4">
-                    When you mute words, you won't see them in your notifications or home timeline.
+                    เมื่อคุณซ่อนคำ คุณจะไม่เห็นคำเหล่านั้นในการแจ้งเตือนหรือไทม์ไลน์หน้าแรกของคุณ
                 </p>
                 
                 <div className="flex gap-2 mb-6">
@@ -225,7 +225,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                             onChange={(e) => setNewMuteWord(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddMuteWord()}
                             className="peer w-full bg-black border border-twitter-border rounded-lg px-3 py-3 text-white outline-none focus:border-twitter-accent focus:ring-1 focus:ring-twitter-accent transition-colors"
-                            placeholder="Enter a word or phrase"
+                            placeholder="ป้อนคำหรือวลี"
                         />
                     </div>
                     <Button onClick={handleAddMuteWord} disabled={!newMuteWord.trim()} className="h-[46px] w-[46px] p-0 flex items-center justify-center rounded-lg">
@@ -235,7 +235,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
 
                 <div className="space-y-2">
                     {mutedWords.length === 0 && (
-                        <p className="text-twitter-gray text-sm italic">No words muted yet.</p>
+                        <p className="text-twitter-gray text-sm italic">ยังไม่มีคำที่ซ่อนไว้</p>
                     )}
                     {mutedWords.map((word) => (
                         <div key={word} className="flex items-center justify-between p-3 bg-twitter-card/50 border border-twitter-border rounded-lg group hover:border-twitter-gray transition-colors">
@@ -256,8 +256,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
       case 'display':
         return (
             <div className="space-y-6 animate-in fade-in duration-300">
-             <h3 className="text-xl font-bold text-white mb-4">Display</h3>
-             <p className="text-twitter-gray text-sm mb-6">Manage your font size, color, and background. These settings affect all the BuzzStream accounts on this browser.</p>
+             <h3 className="text-xl font-bold text-white mb-4">การแสดงผล</h3>
+             <p className="text-twitter-gray text-sm mb-6">จัดการขนาดตัวอักษร สี และพื้นหลัง การตั้งค่าเหล่านี้จะมีผลกับบัญชี BuzzStream ทั้งหมดบนเบราว์เซอร์นี้</p>
 
              <div className="border border-twitter-border rounded-xl p-4 mb-6">
                  <div className="flex gap-4">
@@ -267,30 +267,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
                              <span className="font-bold text-white">BuzzStream</span>
                              <span className="text-twitter-gray">@buzzstream</span>
                          </div>
-                         <p className="text-white">At the heart of BuzzStream are short messages called Tweets.</p>
+                         <p className="text-white">หัวใจสำคัญของ BuzzStream คือข้อความสั้นๆ ที่เรียกว่าทวีต</p>
                      </div>
                  </div>
              </div>
 
-             <h4 className="text-white font-bold text-sm mb-3">Background</h4>
+             <h4 className="text-white font-bold text-sm mb-3">พื้นหลัง</h4>
              <div className="grid grid-cols-3 gap-4">
                  <div 
                     onClick={() => setTheme('default')}
                     className={`border rounded-lg p-4 cursor-pointer text-center font-bold transition-all ${theme === 'default' ? 'bg-white text-black border-twitter-accent ring-2 ring-twitter-accent' : 'bg-white text-black border-transparent opacity-80'}`}
                  >
-                     Default
+                     ค่าเริ่มต้น
                  </div>
                  <div 
                     onClick={() => setTheme('dim')}
                     className={`border rounded-lg p-4 cursor-pointer text-center font-bold transition-all ${theme === 'dim' ? 'bg-[#15202b] text-white border-twitter-accent ring-2 ring-twitter-accent' : 'bg-[#15202b] text-white border-twitter-border'}`}
                  >
-                     Dim
+                     หรี่แสง
                  </div>
                  <div 
                     onClick={() => setTheme('lights-out')}
                     className={`border rounded-lg p-4 cursor-pointer text-center font-bold transition-all ${theme === 'lights-out' ? 'bg-black text-white border-twitter-accent ring-2 ring-twitter-accent' : 'bg-black text-white border-twitter-border'}`}
                  >
-                     Lights out
+                     ไฟมืด
                  </div>
              </div>
           </div>
@@ -303,14 +303,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
       {/* Settings Navigation Column */}
       <div className="w-1/3 border-r border-twitter-border hidden sm:block">
          <div className="sticky top-0 z-30 bg-black/60 backdrop-blur-md border-b border-twitter-border px-4 py-3">
-            <h2 className="text-xl font-bold text-white">Settings</h2>
+            <h2 className="text-xl font-bold text-white">การตั้งค่า</h2>
          </div>
          <div className="py-2">
             {[
-                { id: 'account', label: 'Your Account', icon: User },
-                { id: 'privacy', label: 'Privacy and safety', icon: Lock },
-                { id: 'notifications', label: 'Notifications', icon: Bell },
-                { id: 'display', label: 'Display', icon: Monitor },
+                { id: 'account', label: 'บัญชีของคุณ', icon: User },
+                { id: 'privacy', label: 'ความเป็นส่วนตัวและความปลอดภัย', icon: Lock },
+                { id: 'notifications', label: 'การแจ้งเตือน', icon: Bell },
+                { id: 'display', label: 'การแสดงผล', icon: Monitor },
             ].map((item) => (
                 <div 
                     key={item.id}
@@ -331,18 +331,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentUser, onUpdat
       <div className="flex-1 sm:max-w-[600px] bg-black">
          <div className="sticky top-0 z-30 bg-black/60 backdrop-blur-md border-b border-twitter-border px-4 py-3 flex items-center sm:hidden">
             {/* Mobile Header */}
-            <h2 className="text-xl font-bold text-white">Settings</h2>
+            <h2 className="text-xl font-bold text-white">การตั้งค่า</h2>
          </div>
          
          {/* Mobile Navigation (Tabs) */}
          <div className="flex sm:hidden overflow-x-auto border-b border-twitter-border no-scrollbar">
-            {['account', 'privacy', 'notifications', 'display'].map((tab) => (
+            {[
+                { id: 'account', label: 'บัญชี' },
+                { id: 'privacy', label: 'ความเป็นส่วนตัว' },
+                { id: 'notifications', label: 'แจ้งเตือน' },
+                { id: 'display', label: 'แสดงผล' }
+            ].map((tab) => (
                 <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab as SettingsTab)}
-                    className={`flex-shrink-0 px-4 py-3 text-sm font-medium capitalize ${activeTab === tab ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray'}`}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as SettingsTab)}
+                    className={`flex-shrink-0 px-4 py-3 text-sm font-medium capitalize ${activeTab === tab.id ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray'}`}
                 >
-                    {tab}
+                    {tab.label}
                 </button>
             ))}
          </div>

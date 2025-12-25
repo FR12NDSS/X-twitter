@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Settings, MailPlus, ArrowLeft, Send, Image, Smile, Info } from 'lucide-react';
 import { Button } from './Button';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface Message {
   id: string;
@@ -156,7 +157,13 @@ export const Messages: React.FC = () => {
                  <img src={selectedConversation.user.avatarUrl} className="w-16 h-16 rounded-full mb-3 object-cover" alt="" />
                  <h3 className="text-lg font-bold text-white">{selectedConversation.user.name}</h3>
                  <p className="text-twitter-gray text-sm">@{selectedConversation.user.handle}</p>
-                 <p className="text-twitter-gray text-sm mt-2">{selectedConversation.user.isVerified ? 'Verified Account' : 'Joined March 2025'}</p>
+                 <p className="text-twitter-gray text-sm mt-2 flex items-center gap-1 justify-center">
+                    {selectedConversation.user.isVerified ? (
+                        <>Verified Account <VerifiedBadge className="w-3 h-3" /></>
+                    ) : (
+                        'Joined March 2025'
+                    )}
+                 </p>
              </div>
 
              {selectedConversation.history.map(msg => (

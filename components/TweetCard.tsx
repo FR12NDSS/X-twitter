@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Repeat2, Heart, Share, BarChart2, BadgeCheck, CalendarClock, PenLine, Link, Bookmark, MoreHorizontal, UserPlus, UserMinus, Frown, Undo2 } from 'lucide-react';
+import { MessageCircle, Repeat2, Heart, Share, BarChart2, CalendarClock, PenLine, Link, Bookmark, MoreHorizontal, UserPlus, UserMinus, Frown, Undo2 } from 'lucide-react';
 import { TweetData } from '../types';
 import { formatText } from '../utils/textUtils';
 import { MOCK_USERS } from '../utils/mockData';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface TweetCardProps {
   tweet: TweetData;
@@ -39,6 +40,9 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
   const retweetRef = useRef<HTMLDivElement>(null);
   const shareRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
+
+  // Profile Shape Logic
+  const profileShapeClass = tweet.profileShape === 'square' ? 'rounded-xl' : 'rounded-full';
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -173,7 +177,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     } else if (type === 'copy') {
       try {
         await navigator.clipboard.writeText(`https://buzzstream.ai/${tweet.authorHandle}/status/${tweet.id}`);
-        alert("Link copied to clipboard!");
+        alert("คัดลอกลิงก์แล้ว!");
       } catch (err) {
         console.error('Failed to copy: ', err);
       }
@@ -313,7 +317,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
             <img 
                 src={tweet.avatarUrl} 
                 alt={tweet.authorName} 
-                className="w-10 h-10 rounded-full object-cover"
+                className={`w-10 h-10 object-cover ${profileShapeClass}`}
             />
             </div>
 
@@ -323,9 +327,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-1 text-[15px] mb-1 overflow-hidden flex-wrap">
                     <span className="font-bold text-white truncate">{tweet.authorName}</span>
-                    {tweet.isVerified && (
-                    <BadgeCheck className="w-4 h-4 text-twitter-accent fill-current flex-shrink-0" />
-                    )}
+                    <VerifiedBadge user={tweet} className="w-4 h-4 flex-shrink-0" />
                     <span className="text-twitter-gray truncate">@{tweet.authorHandle}</span>
                     <span className="text-twitter-gray flex-shrink-0">·</span>
                     
@@ -354,7 +356,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                                 onClick={(e) => handleMoreAction(e, 'not_interested')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <Frown className="w-4 h-4" /> Not interested
+                                <Frown className="w-4 h-4" /> ไม่สนใจ
                             </div>
                             <div 
                                 onClick={(e) => handleMoreAction(e, 'follow')}
@@ -362,11 +364,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                             >
                                 {isFollowing ? (
                                     <>
-                                        <UserMinus className="w-4 h-4" /> Unfollow @{tweet.authorHandle}
+                                        <UserMinus className="w-4 h-4" /> เลิกติดตาม @{tweet.authorHandle}
                                     </>
                                 ) : (
                                     <>
-                                        <UserPlus className="w-4 h-4" /> Follow @{tweet.authorHandle}
+                                        <UserPlus className="w-4 h-4" /> ติดตาม @{tweet.authorHandle}
                                     </>
                                 )}
                             </div>
@@ -374,7 +376,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                                 onClick={(e) => handleMoreAction(e, 'analytics')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <BarChart2 className="w-4 h-4" /> View post engagements
+                                <BarChart2 className="w-4 h-4" /> ดูการมีส่วนร่วมกับโพสต์
                             </div>
                         </div>
                     )}
@@ -412,7 +414,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     if (onClick) onClick(tweet.quotedTweet!);
                 }}>
                     <div className="flex items-center gap-1 mb-1">
-                        <img src={tweet.quotedTweet.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        <img 
+                            src={tweet.quotedTweet.avatarUrl} 
+                            alt="" 
+                            className={`w-5 h-5 object-cover ${tweet.quotedTweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} 
+                        />
                         <span className="font-bold text-white text-sm truncate">{tweet.quotedTweet.authorName}</span>
                         <span className="text-twitter-gray text-sm truncate">@{tweet.quotedTweet.authorHandle}</span>
                         <span className="text-twitter-gray text-sm">· {tweet.quotedTweet.timestamp}</span>
@@ -459,13 +465,13 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                                 onClick={(e) => handleRetweetAction(e, 'repost')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <Repeat2 className="w-4 h-4" /> Repost
+                                <Repeat2 className="w-4 h-4" /> รีโพสต์
                             </div>
                             <div 
                                 onClick={(e) => handleRetweetAction(e, 'quote')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <PenLine className="w-4 h-4" /> Quote
+                                <PenLine className="w-4 h-4" /> อ้างอิง
                             </div>
                         </div>
                     )}
@@ -514,14 +520,14 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                                 onClick={(e) => handleShareAction(e, 'copy')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <Link className="w-4 h-4" /> Copy link
+                                <Link className="w-4 h-4" /> คัดลอกลิงก์
                             </div>
                             <div 
                                 onClick={(e) => handleShareAction(e, 'bookmark')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
                                 <Bookmark className={`w-4 h-4 ${tweet.isBookmarked ? 'fill-current text-twitter-accent' : ''}`} /> 
-                                {tweet.isBookmarked ? 'Remove Bookmark' : 'Bookmark'}
+                                {tweet.isBookmarked ? 'ลบบุ๊กมาร์ก' : 'บุ๊กมาร์ก'}
                             </div>
                         </div>
                     )}
@@ -546,10 +552,10 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     )}
                     
                     <span className="text-sm font-medium">
-                        {undoToast.type === 'like' && 'Liked'}
-                        {undoToast.type === 'retweet' && 'Reposted'}
+                        {undoToast.type === 'like' && 'ถูกใจ'}
+                        {undoToast.type === 'retweet' && 'รีโพสต์แล้ว'}
                         {undoToast.type === 'follow' && (
-                             undoToast.action === 'followed' ? `Followed @${tweet.authorHandle}` : `Unfollowed @${tweet.authorHandle}`
+                             undoToast.action === 'followed' ? `ติดตาม @${tweet.authorHandle} แล้ว` : `เลิกติดตาม @${tweet.authorHandle} แล้ว`
                         )}
                     </span>
                 </div>
@@ -561,7 +567,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     className="flex items-center gap-1 hover:bg-white/20 rounded-full px-2 py-1 -mr-2 transition-colors"
                 >
                     <Undo2 className="w-4 h-4" />
-                    <span className="text-xs font-bold">Undo</span>
+                    <span className="text-xs font-bold">เลิกทำ</span>
                 </button>
             </div>
         )}

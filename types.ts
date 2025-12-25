@@ -21,12 +21,23 @@ export interface TweetData {
   views: number; // Impressions
   reach?: number; // Unique accounts reached
   isVerified?: boolean;
+  verifiedBadges?: string[]; // Array of badge URLs
+  profileShape?: 'circle' | 'square'; // Profile picture shape
   isScheduled?: boolean;
   isBookmarked?: boolean;
   comments?: TweetComment[];
   quotedTweet?: TweetData; // New property for Quote Tweets
   images?: string[]; // Support for post images
   hashtags?: string[]; // Support for hashtags
+}
+
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  avatarUrl: string; // Gradient or Image
+  isJoined?: boolean;
 }
 
 export interface User {
@@ -42,6 +53,9 @@ export interface User {
   following?: number;
   followers?: number;
   isVerified?: boolean;
+  verifiedBadges?: string[]; // Up to 5 custom badges
+  profileShape?: 'circle' | 'square'; // Default is circle
+  joinedCommunities?: string[]; // IDs of joined communities
   isAdmin?: boolean; // New Admin Flag
 }
 
@@ -58,4 +72,6 @@ export enum NavigationItem {
   PROFILE = 'Profile',
   SETTINGS = 'Settings',
   ADMIN = 'Admin Panel', // New Admin Navigation Item
+  SPACES = 'Spaces', // New
+  MONETIZATION = 'Monetization', // New
 }

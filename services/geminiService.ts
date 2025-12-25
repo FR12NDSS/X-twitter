@@ -13,7 +13,7 @@ const FEED_SCHEMA: Schema = {
       authorName: { type: Type.STRING },
       authorHandle: { type: Type.STRING },
       content: { type: Type.STRING },
-      timestamp: { type: Type.STRING, description: "Relative time string like '2h', '15m', '1d'" },
+      timestamp: { type: Type.STRING, description: "Relative time string in Thai like '2 ชม.', '15 นาที', '1 วัน'" },
       likes: { type: Type.INTEGER },
       retweets: { type: Type.INTEGER },
       replies: { type: Type.INTEGER },
@@ -59,12 +59,12 @@ export const generateFeed = async (topic?: string): Promise<TweetData[]> => {
 
   try {
     const prompt = topic 
-      ? `Generate 5 engaging social media posts specifically about "${topic}". 
+      ? `Generate 5 engaging social media posts in Thai language specifically about "${topic}". 
          Make them feel authentic, varied in tone (some serious, some casual), and written by real humans.
          Ensure the handles look realistic.
          Generate realistic view counts (impressions) and reach stats.
          Include relevant hashtags.`
-      : `Generate 5 diverse and engaging social media posts. 
+      : `Generate 5 diverse and engaging social media posts in Thai language. 
          Mix topics like technology, coding humor, ai news, coffee culture, and motivation. 
          Make them feel authentic and written by real humans.
          Ensure the handles look realistic (e.g., @coder_life, @tech_guru).
@@ -106,7 +106,7 @@ export const refineTweetText = async (currentText: string, tone: 'funny' | 'prof
   if (!apiKey) return currentText;
 
   try {
-    const prompt = `Rewrite the following social media post to be more ${tone}, engaging, and concise. Keep hashtags if relevant. Text: "${currentText}"`;
+    const prompt = `Rewrite the following social media post in Thai to be more ${tone}, engaging, and concise. Keep hashtags if relevant. Text: "${currentText}"`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',

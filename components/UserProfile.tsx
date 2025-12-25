@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, Link as LinkIcon, MapPin, X, Camera, Undo2, UserPl
 import { User, TweetData } from '../types';
 import { TweetCard } from './TweetCard';
 import { Button } from './Button';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface EditProfileModalProps {
   user: User;
@@ -25,6 +26,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
   if (!isOpen) return null;
 
   const hasChanges = JSON.stringify(user) !== JSON.stringify(formData);
+  const profileShapeClass = user.profileShape === 'square' ? 'rounded-2xl' : 'rounded-full';
 
   const handleCloseAttempt = () => {
     if (hasChanges) {
@@ -47,9 +49,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
         {showDiscardAlert && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl p-6 animate-in fade-in duration-100">
             <div className="bg-black border border-twitter-border p-6 rounded-2xl shadow-2xl max-w-xs w-full">
-              <h3 className="text-xl font-bold text-white mb-2">Discard changes?</h3>
+              <h3 className="text-xl font-bold text-white mb-2">ทิ้งการเปลี่ยนแปลง?</h3>
               <p className="text-twitter-gray text-[15px] mb-6 leading-5">
-                This can't be undone and you'll lose your changes.
+                การดำเนินการนี้ไม่สามารถย้อนกลับได้ และคุณจะสูญเสียการเปลี่ยนแปลง
               </p>
               <div className="flex flex-col gap-3">
                 <Button 
@@ -57,7 +59,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                   fullWidth
                   onClick={handleDiscard}
                 >
-                  Discard
+                  ทิ้ง
                 </Button>
                 <Button 
                   variant="outline" 
@@ -65,7 +67,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                   className="h-11 border-twitter-border text-white hover:bg-white/10"
                   onClick={() => setShowDiscardAlert(false)}
                 >
-                  Cancel
+                  ยกเลิก
                 </Button>
               </div>
             </div>
@@ -78,10 +80,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
             <button onClick={handleCloseAttempt} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <X className="w-5 h-5 text-white" />
             </button>
-            <h2 className="text-xl font-bold text-white">Edit profile</h2>
+            <h2 className="text-xl font-bold text-white">แก้ไขข้อมูลส่วนตัว</h2>
           </div>
           <Button onClick={() => onSave(formData)} size="sm" variant="secondary" className="font-bold">
-            Save
+            บันทึก
           </Button>
         </div>
         
@@ -92,7 +94,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                 {formData.bannerUrl ? (
                     <img src={formData.bannerUrl} className="w-full h-full object-cover opacity-60" alt="Banner" />
                 ) : (
-                    <div className="w-full h-full bg-twitter-card flex items-center justify-center text-twitter-gray text-sm">Add Banner</div>
+                    <div className="w-full h-full bg-twitter-card flex items-center justify-center text-twitter-gray text-sm">เพิ่มแบนเนอร์</div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center gap-4">
                     <div className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"><Camera className="w-5 h-5 text-white" /></div>
@@ -107,7 +109,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                 </div>
                 <div className="absolute -bottom-10 left-4">
                     <div className="relative">
-                        <img src={formData.avatarUrl} className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 border-black object-cover opacity-80" alt="Avatar" />
+                        <img src={formData.avatarUrl} className={`w-20 h-20 sm:w-28 sm:h-28 border-4 border-black object-cover opacity-80 ${profileShapeClass}`} alt="Avatar" />
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"><Camera className="w-5 h-5 text-white" /></div>
                         </div>
@@ -118,7 +120,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
              {/* Inputs */}
              <div className="space-y-4 pt-4">
                  <div className="border border-twitter-border rounded-md px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray">Name</label>
+                    <label className="block text-xs text-twitter-gray">ชื่อ</label>
                     <input 
                         type="text" 
                         value={formData.name} 
@@ -127,7 +129,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                     />
                  </div>
                  <div className="border border-twitter-border rounded-md px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray">Bio</label>
+                    <label className="block text-xs text-twitter-gray">ประวัติโดยย่อ</label>
                     <textarea 
                         value={formData.bio || ''} 
                         onChange={e => setFormData({...formData, bio: e.target.value})}
@@ -135,7 +137,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                     />
                  </div>
                  <div className="border border-twitter-border rounded-md px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray">Location</label>
+                    <label className="block text-xs text-twitter-gray">ตำแหน่งที่ตั้ง</label>
                     <input 
                         type="text" 
                         value={formData.location || ''} 
@@ -144,7 +146,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                     />
                  </div>
                   <div className="border border-twitter-border rounded-md px-3 py-2 focus-within:border-twitter-accent focus-within:ring-1 focus-within:ring-twitter-accent transition-colors">
-                    <label className="block text-xs text-twitter-gray">Website</label>
+                    <label className="block text-xs text-twitter-gray">เว็บไซต์</label>
                     <input 
                         type="text" 
                         value={formData.website || ''} 
@@ -172,7 +174,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(user.followers || 0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('Posts');
+  const [activeTab, setActiveTab] = useState('โพสต์');
+  
+  const profileShapeClass = user.profileShape === 'square' ? 'rounded-2xl' : 'rounded-full';
 
   // Undo State
   const [undoToast, setUndoToast] = useState<{ action: 'followed' | 'unfollowed', visible: boolean } | null>(null);
@@ -263,7 +267,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'Posts':
+      case 'โพสต์':
         return (
           <>
             {tweets.map((tweet) => (
@@ -271,40 +275,40 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
             ))}
             {tweets.length === 0 && (
               <div className="p-8 text-center text-twitter-gray">
-                No tweets to show yet.
+                ยังไม่มีโพสต์ให้แสดง
               </div>
             )}
           </>
         );
-      case 'Replies':
+      case 'การตอบกลับ':
         return (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
-            <p className="text-xl font-bold text-white mb-2">No replies yet</p>
-            <p className="text-twitter-gray max-w-sm">When you reply to posts, they will show up here.</p>
+            <p className="text-xl font-bold text-white mb-2">ยังไม่มีการตอบกลับ</p>
+            <p className="text-twitter-gray max-w-sm">เมื่อคุณตอบกลับโพสต์ มันจะแสดงที่นี่</p>
           </div>
         );
-      case 'Highlights':
+      case 'ไฮไลท์':
         return (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
-            <p className="text-xl font-bold text-white mb-2">No highlights yet</p>
-            <p className="text-twitter-gray max-w-sm">Pin your favorite posts to your profile.</p>
+            <p className="text-xl font-bold text-white mb-2">ยังไม่มีไฮไลท์</p>
+            <p className="text-twitter-gray max-w-sm">ปักหมุดโพสต์โปรดของคุณไว้ที่โปรไฟล์</p>
           </div>
         );
-      case 'Media':
+      case 'สื่อ':
         return (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
             <div className="w-full max-w-xs h-40 bg-twitter-card mb-6 rounded-xl flex items-center justify-center mx-auto">
                 <Camera className="w-10 h-10 text-twitter-gray" />
             </div>
-            <p className="text-xl font-bold text-white mb-2">Lights, camera... attachment!</p>
-            <p className="text-twitter-gray max-w-sm">When you send tweets with photos or videos, they will show up here.</p>
+            <p className="text-xl font-bold text-white mb-2">แสง สี เสียง... แอคชั่น!</p>
+            <p className="text-twitter-gray max-w-sm">เมื่อคุณส่งทวีตพร้อมรูปภาพหรือวิดีโอ มันจะแสดงที่นี่</p>
           </div>
         );
-      case 'Likes':
+      case 'ถูกใจ':
         return (
           <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
-            <p className="text-xl font-bold text-white mb-2">No likes yet</p>
-            <p className="text-twitter-gray max-w-sm">Tap the heart on any post to show it some love. When you do, it'll show up here.</p>
+            <p className="text-xl font-bold text-white mb-2">ยังไม่มีการกดถูกใจ</p>
+            <p className="text-twitter-gray max-w-sm">แตะที่หัวใจบนโพสต์ใดก็ได้เพื่อแสดงความรัก เมื่อคุณทำเช่นนั้น มันจะแสดงที่นี่</p>
           </div>
         );
       default:
@@ -331,7 +335,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
         </button>
         <div className="flex flex-col">
           <h2 className="text-xl font-bold text-white leading-5">{user.name}</h2>
-          <span className="text-xs text-twitter-gray">{tweets.length} posts</span>
+          <span className="text-xs text-twitter-gray">{tweets.length} โพสต์</span>
         </div>
       </div>
 
@@ -358,7 +362,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
               <img 
                 src={user.avatarUrl} 
                 alt={user.name} 
-                className="w-20 h-20 sm:w-32 sm:h-32 rounded-full border-4 border-black object-cover bg-black"
+                className={`w-20 h-20 sm:w-32 sm:h-32 border-4 border-black object-cover bg-black ${profileShapeClass}`}
               />
             </div>
             <div className="mt-3 flex gap-3">
@@ -367,21 +371,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
                 className="font-bold border-gray-500 text-white hover:bg-white/10"
                 onClick={() => setIsEditModalOpen(true)}
               >
-                Edit profile
+                แก้ไขข้อมูลส่วนตัว
               </Button>
               <Button 
                 variant={isFollowing ? "outline" : "secondary"}
                 className={`font-bold ${isFollowing ? 'border-gray-500 text-white hover:bg-white/10' : ''}`}
                 onClick={handleFollow}
               >
-                {isFollowing ? 'Following' : 'Follow'}
+                {isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
               </Button>
             </div>
           </div>
 
           {/* Name & Bio */}
           <div className="mb-4">
-            <h1 className="text-xl font-bold text-white leading-tight">{user.name}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-xl font-bold text-white leading-tight">{user.name}</h1>
+                <VerifiedBadge user={user} className="w-5 h-5" />
+            </div>
             <p className="text-twitter-gray text-sm mb-3">@{user.handle}</p>
             {user.bio && (
               <p className="text-white text-[15px] mb-3 whitespace-pre-wrap">{user.bio}</p>
@@ -415,11 +422,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
             <div className="flex gap-4 text-sm">
               <div className="hover:underline cursor-pointer">
                 <span className="font-bold text-white">{user.following?.toLocaleString()}</span> 
-                <span className="text-twitter-gray ml-1">Following</span>
+                <span className="text-twitter-gray ml-1">กำลังติดตาม</span>
               </div>
               <div className="hover:underline cursor-pointer">
                 <span className="font-bold text-white">{followerCount.toLocaleString()}</span> 
-                <span className="text-twitter-gray ml-1">Followers</span>
+                <span className="text-twitter-gray ml-1">ผู้ติดตาม</span>
               </div>
             </div>
           </div>
@@ -427,7 +434,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
 
         {/* Tabs */}
         <div className="flex">
-          {['Posts', 'Replies', 'Highlights', 'Media', 'Likes'].map((tab) => (
+          {['โพสต์', 'การตอบกลับ', 'ไฮไลท์', 'สื่อ', 'ถูกใจ'].map((tab) => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -467,7 +474,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
                     {undoToast.action === 'followed' ? <UserPlus className="w-4 h-4" /> : <UserMinus className="w-4 h-4" />}
                     
                     <span className="text-sm font-medium">
-                        {undoToast.action === 'followed' ? `Followed @${user.handle}` : `Unfollowed @${user.handle}`}
+                        {undoToast.action === 'followed' ? `ติดตาม @${user.handle} แล้ว` : `เลิกติดตาม @${user.handle} แล้ว`}
                     </span>
                 </div>
                 
@@ -478,7 +485,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
                     className="flex items-center gap-1 hover:bg-white/20 rounded-full px-2 py-1 -mr-2 transition-colors"
                 >
                     <Undo2 className="w-4 h-4" />
-                    <span className="text-xs font-bold">Undo</span>
+                    <span className="text-xs font-bold">เลิกทำ</span>
                 </button>
             </div>
       )}
