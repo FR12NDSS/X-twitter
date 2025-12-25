@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MessageCircle, Repeat2, Heart, Share, BarChart2, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, Heart, Share, BarChart2 } from 'lucide-react';
 import { TweetData, TweetComment } from '../types';
+import { VerifiedBadge } from './VerifiedBadge';
 import { Button } from './Button';
 import { formatText } from '../utils/textUtils';
-import { VerifiedBadge } from './VerifiedBadge';
 
 interface TweetDetailProps {
   tweet: TweetData;
   onBack: () => void;
   onReply: (tweet: TweetData) => void;
+  onHashtagClick?: (tag: string) => void;
+  onUserClick?: (handle: string) => void;
 }
 
-export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply }) => {
+export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply, onHashtagClick, onUserClick }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(tweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
@@ -73,6 +75,45 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
     onReply(commentAsTweet);
   };
 
+  const isVideo = (url: string) => {
+      // Basic check for video type in data URL or extension
+      return url.startsWith('data:video') || url.endsWith('.mp4') || url.endsWith('.mov') || url.endsWith('.webm');
+  };
+
+  const handleUserClickInternal = () => {
+      if (onUserClick) {
+          onUserClick(tweet.authorHandle);
+      }
+  };
+
+  // Render images/videos grid
+  const renderMedia = () => {
+    if (!tweet.images || tweet.images.length === 0) return null;
+
+    return (
+        <div className="mt-4 mb-4 grid gap-2">
+            {tweet.images.map((url, index) => (
+                <div key={index} className="rounded-2xl overflow-hidden border border-twitter-border/50 w-full">
+                    {isVideo(url) ? (
+                        <video 
+                            src={url} 
+                            className="w-full h-auto max-h-[600px] object-cover bg-black" 
+                            controls 
+                            poster={tweet.videoThumbnail} // Use thumbnail if available
+                        />
+                    ) : (
+                        <img 
+                            src={url} 
+                            className="w-full h-auto max-h-[600px] object-cover" 
+                            alt={`Attachment ${index + 1}`} 
+                        />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+  };
+
   return (
     <div>
       {/* Header */}
@@ -89,14 +130,14 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
       <div className="p-4">
         {/* Main Tweet Author */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-3">
+          <div className="flex gap-3 cursor-pointer" onClick={handleUserClickInternal}>
             <img 
               src={tweet.avatarUrl} 
               alt={tweet.authorName} 
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-10 h-10 rounded-full object-cover hover:opacity-80 transition-opacity"
             />
             <div className="flex flex-col">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 hover:underline decoration-white">
                 <span className="font-bold text-white">{tweet.authorName}</span>
                 {tweet.isVerified && (
                   <VerifiedBadge className="w-4 h-4" />
@@ -111,12 +152,35 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
         </div>
 
         {/* Main Content */}
-        <div className="text-xl text-white whitespace-pre-wrap leading-normal mb-4">
-          {formatText(tweet.content)}
+        <div className="text-xl text-white whitespace-pre-wrap leading-normal mb-2">
+          {formatText(tweet.content, onHashtagClick)}
         </div>
+        
+        {/* Hashtags List */}
+        {tweet.hashtags && tweet.hashtags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2 mb-2">
+                {tweet.hashtags.map((tag, i) => (
+                    <span 
+                        key={i} 
+                        className="text-twitter-accent hover:underline cursor-pointer font-normal text-lg"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onHashtagClick) {
+                                onHashtagClick(tag.startsWith('#') ? tag : `#${tag}`);
+                            }
+                        }}
+                    >
+                        {tag.startsWith('#') ? tag : `#${tag}`}
+                    </span>
+                ))}
+            </div>
+        )}
+
+        {/* Images / Videos */}
+        {renderMedia()}
 
         {/* Date and Views */}
-        <div className="border-b border-twitter-border pb-4 mb-4">
+        <div className="border-b border-twitter-border pb-4 mb-4 mt-2">
           <div className="text-twitter-gray text-[15px] mb-1">
             {formatFullDate()}
             <span className="mx-1">·</span>
@@ -189,19 +253,25 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
                   <img 
                     src={comment.avatarUrl} 
                     alt={comment.authorName} 
-                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80"
+                    onClick={() => onUserClick && onUserClick(comment.authorHandle)}
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-1 text-[15px] mb-0.5">
-                      <span className="font-bold text-white">{comment.authorName}</span>
-                      <span className="text-twitter-gray">@{comment.authorHandle}</span>
+                      <span 
+                        className="font-bold text-white cursor-pointer hover:underline"
+                        onClick={() => onUserClick && onUserClick(comment.authorHandle)}
+                      >
+                          {comment.authorName}
+                      </span>
+                      <span className="text-twitter-gray cursor-pointer" onClick={() => onUserClick && onUserClick(comment.authorHandle)}>@{comment.authorHandle}</span>
                       <span className="text-twitter-gray">·</span>
                       <span className="text-twitter-gray">{comment.timestamp}</span>
                     </div>
                     <div className="text-twitter-gray text-[13px] mb-1">
-                      Replying to <span className="text-twitter-accent">@{tweet.authorHandle}</span>
+                      Replying to <span className="text-twitter-accent cursor-pointer" onClick={() => onUserClick && onUserClick(tweet.authorHandle)}>@{tweet.authorHandle}</span>
                     </div>
-                    <p className="text-white text-[15px] mb-2">{formatText(comment.content)}</p>
+                    <p className="text-white text-[15px] mb-2">{formatText(comment.content, onHashtagClick)}</p>
                     
                     {/* Comment Actions */}
                     <div className="flex justify-between max-w-xs text-twitter-gray">

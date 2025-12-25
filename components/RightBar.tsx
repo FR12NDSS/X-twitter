@@ -13,9 +13,10 @@ const POPULAR_HASHTAGS = [
 
 interface RightBarProps {
   onTrendClick?: (topic: string) => void;
+  onUserClick?: (handle: string) => void;
 }
 
-export const RightBar: React.FC<RightBarProps> = ({ onTrendClick }) => {
+export const RightBar: React.FC<RightBarProps> = ({ onTrendClick, onUserClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<typeof MOCK_USERS>([]);
   const [isFocused, setIsFocused] = useState(false);
@@ -66,7 +67,9 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick }) => {
   };
 
   const handleResultClick = (handle: string) => {
-    alert(`Navigating to profile: @${handle}`);
+    if (onUserClick) {
+        onUserClick(handle);
+    }
     setSearchQuery('');
     setIsFocused(false);
   };
@@ -180,7 +183,11 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick }) => {
       <div className="bg-twitter-card rounded-2xl overflow-hidden">
         <h2 className="text-xl font-bold text-white px-4 py-3">Who to follow</h2>
         {whoToFollow.map((user, index) => (
-          <div key={index} className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors">
+          <div 
+            key={index} 
+            className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center justify-between transition-colors"
+            onClick={() => onUserClick && onUserClick(user.handle)}
+          >
              <div className="flex items-center gap-3">
                <img src={user.avatarUrl} alt={user.handle} className="w-10 h-10 rounded-full object-cover" />
                <div className="flex flex-col">
@@ -188,7 +195,7 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick }) => {
                  <span className="text-twitter-gray text-sm">@{user.handle}</span>
                </div>
              </div>
-             <Button variant="secondary" size="sm" className="h-8 px-4">Follow</Button>
+             <Button variant="secondary" size="sm" className="h-8 px-4" onClick={(e) => e.stopPropagation()}>Follow</Button>
           </div>
         ))}
         <div className="px-4 py-3 hover:bg-white/5 cursor-pointer text-twitter-accent text-sm">

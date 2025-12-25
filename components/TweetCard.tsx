@@ -1,9 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Repeat2, Heart, Share, BarChart2, CalendarClock, PenLine, Link, Bookmark, MoreHorizontal, UserPlus, UserMinus, Frown, Undo2 } from 'lucide-react';
 import { TweetData } from '../types';
-import { formatText } from '../utils/textUtils';
+import { userService } from '../services/userService';
 import { MOCK_USERS } from '../utils/mockData';
 import { VerifiedBadge } from './VerifiedBadge';
+import { formatText } from '../utils/textUtils';
+import { 
+  Building, Crown, PlayCircle, CalendarClock, MoreHorizontal, Frown, 
+  UserMinus, UserPlus, BarChart2, MessageCircle, Repeat2, PenLine, Heart, 
+  Share, Link, Bookmark, Megaphone, Undo2 
+} from 'lucide-react';
 
 interface TweetCardProps {
   tweet: TweetData;
@@ -12,15 +17,20 @@ interface TweetCardProps {
   onBookmark?: (tweetId: string) => void;
   onQuote?: (tweet: TweetData) => void;
   onAnalytics?: (tweet: TweetData) => void;
+  onHashtagClick?: (tag: string) => void;
+  onUserClick?: (handle: string) => void;
 }
 
-export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, onBookmark, onQuote, onAnalytics }) => {
+export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(tweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [retweetsCount, setRetweetsCount] = useState(tweet.retweets);
   const [isAnimating, setIsAnimating] = useState(false);
   
+  const premiumBadgeUrl = userService.getPremiumBadgeUrl();
+  const businessBadgeUrl = userService.getBusinessBadgeUrl();
+
   // Undo State
   const [undoToast, setUndoToast] = useState<{ 
     type: 'like' | 'retweet' | 'follow', 
@@ -43,6 +53,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
 
   // Profile Shape Logic
   const profileShapeClass = tweet.profileShape === 'square' ? 'rounded-xl' : 'rounded-full';
+
+  // Determine Badge
+  const isBusiness = tweet.premiumType === 'business';
+  const customBadge = isBusiness ? businessBadgeUrl : premiumBadgeUrl;
+  const DefaultStatusIcon = isBusiness ? Building : Crown;
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -246,6 +261,13 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     }
   };
 
+  const handleUserClickInternal = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onUserClick) {
+          onUserClick(tweet.authorHandle);
+      }
+  };
+
   const formatNumber = (num: number) => {
     return Intl.NumberFormat('en-US', {
         notation: "compact",
@@ -253,16 +275,40 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     }).format(num);
   };
 
+  const isVideo = (url: string) => {
+      // Basic check for video type in data URL or extension
+      return url.startsWith('data:video') || url.endsWith('.mp4') || url.endsWith('.mov') || url.endsWith('.webm');
+  };
+
   // Helper to render image grid
   const renderImages = () => {
     if (!tweet.images || tweet.images.length === 0) return null;
 
     const count = tweet.images.length;
+    
+    // Helper to render media element (img or video)
+    const renderMediaElement = (url: string, className: string) => {
+        if (isVideo(url)) {
+            return (
+                <div className={`${className} relative bg-black group`}>
+                    <video 
+                      src={url} 
+                      className="w-full h-full object-cover" 
+                      poster={tweet.videoThumbnail} // Use thumbnail if available
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <PlayCircle className="w-12 h-12 text-white opacity-80" />
+                    </div>
+                </div>
+            );
+        }
+        return <img src={url} className={className} alt="" />;
+    };
 
     if (count === 1) {
         return (
             <div className="mt-3 rounded-2xl overflow-hidden border border-twitter-border/50">
-                <img src={tweet.images[0]} className="w-full h-auto max-h-[500px] object-cover" alt="" />
+                {renderMediaElement(tweet.images[0], "w-full h-auto max-h-[500px] object-cover")}
             </div>
         );
     }
@@ -270,8 +316,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     if (count === 2) {
         return (
             <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
-                <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
-                <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
+                {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
+                {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
             </div>
         );
     }
@@ -280,11 +326,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
         return (
             <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
                 <div className="relative">
-                    <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
+                    {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
                 </div>
                 <div className="grid grid-rows-2 gap-0.5 h-full">
-                    <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
-                    <img src={tweet.images[2]} className="w-full h-full object-cover" alt="" />
+                    {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
+                    {renderMediaElement(tweet.images[2], "w-full h-full object-cover")}
                 </div>
             </div>
         );
@@ -293,17 +339,17 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     if (count >= 4) {
         return (
             <div className="mt-3 grid grid-cols-2 grid-rows-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
-                <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
-                <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
-                <img src={tweet.images[2]} className="w-full h-full object-cover" alt="" />
-                <img src={tweet.images[3]} className="w-full h-full object-cover" alt="" />
+                {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
+                {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
+                {renderMediaElement(tweet.images[2], "w-full h-full object-cover")}
+                {renderMediaElement(tweet.images[3], "w-full h-full object-cover")}
             </div>
         );
     }
   };
 
-  // Ensure view count has a fallback if data is missing
-  const displayViews = tweet.views || (tweet.likes * 42) || 0;
+  // Ensure view count has a fallback if data is missing, but respect 0
+  const displayViews = tweet.views !== undefined ? tweet.views : (tweet.likes * 42) || 0;
 
   return (
     <>
@@ -313,11 +359,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
         >
         <div className="flex gap-4">
             {/* Avatar */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" onClick={handleUserClickInternal}>
             <img 
                 src={tweet.avatarUrl} 
                 alt={tweet.authorName} 
-                className={`w-10 h-10 object-cover ${profileShapeClass}`}
+                className={`w-10 h-10 object-cover ${profileShapeClass} hover:opacity-80 transition-opacity`}
             />
             </div>
 
@@ -326,9 +372,14 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-1 text-[15px] mb-1 overflow-hidden flex-wrap">
-                    <span className="font-bold text-white truncate">{tweet.authorName}</span>
-                    <VerifiedBadge user={tweet} className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-twitter-gray truncate">@{tweet.authorHandle}</span>
+                    <div className="flex items-center gap-1 cursor-pointer hover:underline decoration-white" onClick={handleUserClickInternal}>
+                        <span className="font-bold text-white truncate">{tweet.authorName}</span>
+                        <VerifiedBadge user={tweet} className="w-4 h-4 flex-shrink-0" />
+                        {tweet.isPremium && (
+                            customBadge ? <img src={customBadge} className="w-3 h-3 object-contain flex-shrink-0" /> : <DefaultStatusIcon className="w-3 h-3 text-yellow-500 fill-current flex-shrink-0" />
+                        )}
+                    </div>
+                    <span className="text-twitter-gray truncate cursor-pointer hover:underline decoration-twitter-gray" onClick={handleUserClickInternal}>@{tweet.authorHandle}</span>
                     <span className="text-twitter-gray flex-shrink-0">·</span>
                     
                     {tweet.isScheduled ? (
@@ -385,7 +436,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
 
             {/* Text */}
             <div className="text-[15px] text-white whitespace-pre-wrap leading-normal mb-1">
-                {formatText(tweet.content)}
+                {formatText(tweet.content, onHashtagClick)}
                 {tweet.hashtags && tweet.hashtags.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-2 pt-1">
                         {tweet.hashtags.map((tag, i) => (
@@ -394,7 +445,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                                 className="text-twitter-accent hover:underline cursor-pointer font-normal"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    console.log(`Clicked hashtag: ${tag}`);
+                                    if (onHashtagClick) {
+                                        onHashtagClick(tag.startsWith('#') ? tag : `#${tag}`);
+                                    } else {
+                                        console.log(`Clicked hashtag: ${tag}`);
+                                    }
                                 }}
                             >
                                 {tag.startsWith('#') ? tag : `#${tag}`}
@@ -423,7 +478,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                         <span className="text-twitter-gray text-sm truncate">@{tweet.quotedTweet.authorHandle}</span>
                         <span className="text-twitter-gray text-sm">· {tweet.quotedTweet.timestamp}</span>
                     </div>
-                    <div className="text-white text-sm whitespace-pre-wrap">{formatText(tweet.quotedTweet.content)}</div>
+                    <div className="text-white text-sm whitespace-pre-wrap">{formatText(tweet.quotedTweet.content, onHashtagClick)}</div>
                     {/* Render images for quoted tweet as well, but smaller/simpler */}
                     {tweet.quotedTweet.images && tweet.quotedTweet.images.length > 0 && (
                         <div className="mt-2 rounded-lg overflow-hidden border border-twitter-border/50 h-32">
@@ -440,6 +495,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                 <button 
                 onClick={handleReplyClick}
                 className="group flex items-center gap-2 hover:text-twitter-accent transition-colors"
+                title="Reply"
                 >
                 <div className="p-2 rounded-full group-hover:bg-twitter-accent/10 transition-colors">
                     <MessageCircle className="w-4 h-4" />
@@ -452,6 +508,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     <button 
                     onClick={toggleRetweetMenu}
                     className={`group flex items-center gap-2 transition-colors ${isRetweeted ? 'text-green-500' : 'hover:text-green-500'}`}
+                    title="Repost"
                     >
                     <div className="p-2 rounded-full group-hover:bg-green-500/10 transition-colors">
                         <Repeat2 className="w-4 h-4" />
@@ -481,6 +538,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                 <button 
                 onClick={handleLike}
                 className={`group flex items-center gap-2 transition-colors ${isLiked ? 'text-pink-600' : 'hover:text-pink-600'}`}
+                title="Like"
                 >
                 <div className="p-2 rounded-full group-hover:bg-pink-600/10 transition-colors relative">
                     <Heart 
@@ -494,6 +552,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                 <button 
                 onClick={handleAnalyticsClick}
                 className="group flex items-center gap-2 hover:text-twitter-accent transition-colors"
+                title={`${displayViews.toLocaleString()} Views`}
+                aria-label={`${displayViews} Views`}
                 >
                 <div className="p-2 rounded-full group-hover:bg-twitter-accent/10 transition-colors">
                     <BarChart2 className="w-4 h-4" />
@@ -508,6 +568,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     <button 
                     onClick={toggleShareMenu}
                     className="group flex items-center gap-2 hover:text-twitter-accent transition-colors"
+                    title="Share"
                     >
                     <div className="p-2 rounded-full group-hover:bg-twitter-accent/10 transition-colors">
                         <Share className="w-4 h-4" />
@@ -534,6 +595,13 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                 </div>
 
             </div>
+            {/* Promoted Status Indicator */}
+            {tweet.isPromoted && (
+                <div className="flex items-center gap-1 text-xs text-twitter-gray mt-2">
+                    <Megaphone className="w-3 h-3" />
+                    <span>ได้รับการโปรโมท</span>
+                </div>
+            )}
             </div>
         </div>
         </article>

@@ -28,7 +28,11 @@ export interface TweetData {
   comments?: TweetComment[];
   quotedTweet?: TweetData; // New property for Quote Tweets
   images?: string[]; // Support for post images
+  videoThumbnail?: string; // New: Thumbnail URL for video posts
   hashtags?: string[]; // Support for hashtags
+  isPremium?: boolean; // Show premium badge on tweet
+  premiumType?: 'individual' | 'business'; // Type of premium
+  isPromoted?: boolean; // New: Boost Post status
 }
 
 export interface Community {
@@ -38,6 +42,33 @@ export interface Community {
   memberCount: number;
   avatarUrl: string; // Gradient or Image
   isJoined?: boolean;
+  isBanned?: boolean; // New: Ban status
+  bannedUsers?: string[]; // New: List of handles banned from this community
+}
+
+export interface DatabaseConfig {
+  host: string;
+  name: string;
+  user: string;
+  password?: string;
+}
+
+export interface SiteConfig {
+  domain: string;
+  baseUrl: string;
+  siteName: string;
+  installedAt: string;
+  logoUrl?: string; // New: Custom Logo URL
+}
+
+export interface EmailTemplate {
+    subject: string;
+    body: string;
+}
+
+export interface EmailConfig {
+    verification: EmailTemplate;
+    welcome: EmailTemplate;
 }
 
 export interface User {
@@ -53,10 +84,16 @@ export interface User {
   following?: number;
   followers?: number;
   isVerified?: boolean;
+  isEmailVerified?: boolean; // New: Email Verification Status
   verifiedBadges?: string[]; // Up to 5 custom badges
   profileShape?: 'circle' | 'square'; // Default is circle
   joinedCommunities?: string[]; // IDs of joined communities
   isAdmin?: boolean; // New Admin Flag
+  isPremium?: boolean; // New Premium Flag
+  premiumType?: 'individual' | 'business'; // New: Premium Type
+  premiumSince?: string; // Date string for when they subscribed
+  premiumExpiresAt?: string; // ISO Date string for expiration
+  customPrivileges?: string[]; // IDs of specifically granted privileges
 }
 
 export enum NavigationItem {

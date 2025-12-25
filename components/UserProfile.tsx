@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Calendar, Link as LinkIcon, MapPin, X, Camera, Undo2, UserPlus, UserMinus } from 'lucide-react';
+import { ArrowLeft, Calendar, Link as LinkIcon, MapPin, X, Camera, Undo2, UserPlus, UserMinus, PlayCircle } from 'lucide-react';
 import { User, TweetData } from '../types';
 import { TweetCard } from './TweetCard';
 import { Button } from './Button';
 import { VerifiedBadge } from './VerifiedBadge';
+import { userService } from '../services/userService';
 
 interface EditProfileModalProps {
   user: User;
@@ -15,6 +16,9 @@ interface EditProfileModalProps {
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState(user);
   const [showDiscardAlert, setShowDiscardAlert] = useState(false);
+  
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -39,6 +43,30 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
   const handleDiscard = () => {
     setShowDiscardAlert(false);
     onClose();
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          try {
+              const url = await userService.uploadMedia(file);
+              setFormData({ ...formData, bannerUrl: url });
+          } catch (err) {
+              alert("Failed to upload banner");
+          }
+      }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          try {
+              const url = await userService.uploadMedia(file);
+              setFormData({ ...formData, avatarUrl: url });
+          } catch (err) {
+              alert("Failed to upload avatar");
+          }
+      }
   };
 
   return (
@@ -89,7 +117,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
         
         {/* Body */}
         <div className="p-4 space-y-4">
-             {/* Banner & Avatar edits (Mock Visuals) */}
+             {/* Banner & Avatar edits */}
              <div className="relative h-32 sm:h-48 bg-twitter-card mb-12">
                 {formData.bannerUrl ? (
                     <img src={formData.bannerUrl} className="w-full h-full object-cover opacity-60" alt="Banner" />
@@ -97,7 +125,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                     <div className="w-full h-full bg-twitter-card flex items-center justify-center text-twitter-gray text-sm">เพิ่มแบนเนอร์</div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center gap-4">
-                    <div className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"><Camera className="w-5 h-5 text-white" /></div>
+                    <div 
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                    >
+                        <Camera className="w-5 h-5 text-white" />
+                    </div>
                     {formData.bannerUrl && (
                         <div 
                           className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
@@ -106,12 +139,31 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
                             <X className="w-5 h-5 text-white" />
                         </div>
                     )}
+                    <input 
+                        type="file" 
+                        ref={bannerInputRef} 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleBannerUpload}
+                    />
                 </div>
                 <div className="absolute -bottom-10 left-4">
                     <div className="relative">
                         <img src={formData.avatarUrl} className={`w-20 h-20 sm:w-28 sm:h-28 border-4 border-black object-cover opacity-80 ${profileShapeClass}`} alt="Avatar" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"><Camera className="w-5 h-5 text-white" /></div>
+                            <div 
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="p-2 bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                            >
+                                <Camera className="w-5 h-5 text-white" />
+                            </div>
+                            <input 
+                                type="file" 
+                                ref={avatarInputRef} 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={handleAvatarUpload}
+                            />
                         </div>
                     </div>
                 </div>
@@ -162,20 +214,24 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, isOpen, onClo
 };
 
 interface UserProfileProps {
-  user: User;
+  user: User; // The profile being viewed
+  currentUser?: User | null; // The logged in user
   tweets: TweetData[];
   onBack: () => void;
   loading?: boolean;
   onUpdateProfile?: (user: User) => void;
   onReply?: (tweet: TweetData) => void;
+  onHashtagClick?: (tag: string) => void;
+  onUserClick?: (handle: string) => void;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, loading = false, onUpdateProfile, onReply }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, tweets, onBack, loading = false, onUpdateProfile, onReply, onHashtagClick, onUserClick }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(user.followers || 0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('โพสต์');
   
+  const isOwnProfile = currentUser?.handle === user.handle;
   const profileShapeClass = user.profileShape === 'square' ? 'rounded-2xl' : 'rounded-full';
 
   // Undo State
@@ -188,6 +244,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
         if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     };
   }, []);
+
+  // Update follow state if user changes
+  useEffect(() => {
+      setFollowerCount(user.followers || 0);
+      setIsFollowing(false); // Reset follow state when viewing new profile (mock)
+  }, [user]);
 
   const showUndoNotification = (action: 'followed' | 'unfollowed') => {
     // Clear existing timer
@@ -271,7 +333,13 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
         return (
           <>
             {tweets.map((tweet) => (
-              <TweetCard key={tweet.id} tweet={tweet} onReply={onReply} />
+              <TweetCard 
+                key={tweet.id} 
+                tweet={tweet} 
+                onReply={onReply} 
+                onHashtagClick={onHashtagClick}
+                onUserClick={onUserClick}
+              />
             ))}
             {tweets.length === 0 && (
               <div className="p-8 text-center text-twitter-gray">
@@ -295,14 +363,45 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
           </div>
         );
       case 'สื่อ':
+        const mediaContent = tweets
+            .filter(t => t.images && t.images.length > 0)
+            .flatMap(t => t.images!.map((img, idx) => ({
+                id: `${t.id}_${idx}`,
+                url: img,
+                isVideo: img.startsWith('data:video') || img.endsWith('.mp4') || img.endsWith('.mov') || img.endsWith('.webm')
+            })));
+
+        if (mediaContent.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+                <div className="w-full max-w-xs h-40 bg-twitter-card mb-6 rounded-xl flex items-center justify-center mx-auto">
+                    <Camera className="w-10 h-10 text-twitter-gray" />
+                </div>
+                <p className="text-xl font-bold text-white mb-2">แสง สี เสียง... แอคชั่น!</p>
+                <p className="text-twitter-gray max-w-sm">เมื่อคุณส่งทวีตพร้อมรูปภาพหรือวิดีโอ มันจะแสดงที่นี่</p>
+              </div>
+            );
+        }
+
         return (
-          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
-            <div className="w-full max-w-xs h-40 bg-twitter-card mb-6 rounded-xl flex items-center justify-center mx-auto">
-                <Camera className="w-10 h-10 text-twitter-gray" />
+            <div className="grid grid-cols-3 gap-0.5 mt-0.5">
+                {mediaContent.map((media) => (
+                    <div key={media.id} className="aspect-square relative cursor-pointer bg-twitter-card group">
+                        {media.isVideo ? (
+                            <>
+                                <video src={media.url} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10">
+                                    <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                                        <PlayCircle className="w-5 h-5 text-white fill-white/20" />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <img src={media.url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                        )}
+                    </div>
+                ))}
             </div>
-            <p className="text-xl font-bold text-white mb-2">แสง สี เสียง... แอคชั่น!</p>
-            <p className="text-twitter-gray max-w-sm">เมื่อคุณส่งทวีตพร้อมรูปภาพหรือวิดีโอ มันจะแสดงที่นี่</p>
-          </div>
         );
       case 'ถูกใจ':
         return (
@@ -366,20 +465,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, tweets, onBack, 
               />
             </div>
             <div className="mt-3 flex gap-3">
-              <Button 
-                variant="outline" 
-                className="font-bold border-gray-500 text-white hover:bg-white/10"
-                onClick={() => setIsEditModalOpen(true)}
-              >
-                แก้ไขข้อมูลส่วนตัว
-              </Button>
-              <Button 
-                variant={isFollowing ? "outline" : "secondary"}
-                className={`font-bold ${isFollowing ? 'border-gray-500 text-white hover:bg-white/10' : ''}`}
-                onClick={handleFollow}
-              >
-                {isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
-              </Button>
+              {isOwnProfile ? (
+                  <Button 
+                    variant="outline" 
+                    className="font-bold border-gray-500 text-white hover:bg-white/10"
+                    onClick={() => setIsEditModalOpen(true)}
+                  >
+                    แก้ไขข้อมูลส่วนตัว
+                  </Button>
+              ) : (
+                  <Button 
+                    variant={isFollowing ? "outline" : "secondary"}
+                    className={`font-bold ${isFollowing ? 'border-gray-500 text-white hover:bg-white/10' : ''}`}
+                    onClick={handleFollow}
+                  >
+                    {isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+                  </Button>
+              )}
             </div>
           </div>
 

@@ -3,7 +3,7 @@ import { BadgeCheck } from 'lucide-react';
 import { User } from '../types';
 
 interface VerifiedBadgeProps {
-  user?: User | { isVerified?: boolean; verifiedBadges?: string[] };
+  user?: User | { isVerified?: boolean; verifiedBadges?: string[]; premiumType?: string };
   className?: string;
   forceDefault?: boolean; // If true, only shows the default icon (used for badge upload preview)
 }
@@ -33,7 +33,10 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({ user, className = 
 
   // Fallback to default checkmark if verified but no custom badges
   if (user?.isVerified) {
-      return <BadgeCheck className={`${className} text-twitter-accent fill-current`} />;
+      // Check for Business Premium to render Gold
+      const isBusiness = user.premiumType === 'business' || user.premiumType === 'organization';
+      
+      return <BadgeCheck className={`${className} ${isBusiness ? 'text-yellow-500' : 'text-twitter-accent'} fill-current`} />;
   }
 
   return null;

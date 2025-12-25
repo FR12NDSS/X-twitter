@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { Image, Smile, CalendarClock, MapPin, Wand2, Loader2, X, BadgeCheck } from 'lucide-react';
+import { Image, Smile, CalendarClock, MapPin, Wand2, Loader2, X, BadgeCheck, PlayCircle } from 'lucide-react';
 import { Button } from './Button';
 import { User } from '../types';
 import { refineTweetText } from '../services/geminiService';
 import { MOCK_USERS } from '../utils/mockData';
+import { userService } from '../services/userService';
+import { generateVideoThumbnail, dataURLtoFile } from '../utils/mediaUtils';
 
 interface ComposerProps {
   currentUser: User;
-  onTweet: (content: string, scheduledDate?: string) => void;
+  onTweet: (content: string, scheduledDate?: string, images?: string[], videoThumbnail?: string) => void;
 }
 
 export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
@@ -15,11 +17,15 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
   const [isRefining, setIsRefining] = useState(false);
   const [scheduleTime, setScheduleTime] = useState('');
   const [showScheduler, setShowScheduler] = useState(false);
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [videoThumbnail, setVideoThumbnail] = useState<string | undefined>(undefined);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Mention State
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Character Limits
   const MAX_CHARS = 280;
@@ -34,10 +40,12 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
   const dashOffset = circumference - (progress * circumference);
 
   const handleTweet = () => {
-    if (content.trim() && !isOverLimit) {
-      onTweet(content, showScheduler && scheduleTime ? scheduleTime : undefined);
+    if ((content.trim() || attachments.length > 0) && !isOverLimit) {
+      onTweet(content, showScheduler && scheduleTime ? scheduleTime : undefined, attachments, videoThumbnail);
       setContent('');
       setScheduleTime('');
+      setAttachments([]);
+      setVideoThumbnail(undefined);
       setShowScheduler(false);
       setShowMentions(false);
     }
@@ -58,6 +66,74 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
     setShowScheduler(!showScheduler);
   };
 
+  // --- Media Upload Logic ---
+  const handleMediaClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+        setIsUploading(true);
+        const uploadPromises: Promise<string>[] = [];
+        let generatedThumbUrl: string | undefined = undefined;
+
+        // Process files
+        for (const file of Array.from(files)) {
+            // Upload the original file
+            uploadPromises.push(userService.uploadMedia(file));
+
+            // If it's a video, generate thumbnail
+            if (file.type.startsWith('video/')) {
+                try {
+                    const thumbDataUrl = await generateVideoThumbnail(file);
+                    // Convert Data URL to File object for uploading
+                    const thumbFile = dataURLtoFile(thumbDataUrl, `thumb_${file.name}.jpg`);
+                    // Upload thumbnail
+                    generatedThumbUrl = await userService.uploadMedia(thumbFile);
+                } catch (err) {
+                    console.error("Error generating thumbnail:", err);
+                }
+            }
+        }
+
+        try {
+            const uploadedUrls = await Promise.all(uploadPromises);
+            setAttachments(prev => [...prev, ...uploadedUrls]);
+            if (generatedThumbUrl) {
+                setVideoThumbnail(generatedThumbUrl);
+            }
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Upload failed. Please try again.");
+        } finally {
+            setIsUploading(false);
+            // Reset input
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+      // If we are removing the video, we should probably also remove the thumbnail if it's the only one.
+      // For simplicity, if attachments becomes empty, clear thumbnail.
+      setAttachments(prev => {
+          const newAttachments = prev.filter((_, i) => i !== index);
+          if (newAttachments.length === 0) setVideoThumbnail(undefined);
+          
+          // Check if any video remains (simple check)
+          const hasVideo = newAttachments.some(url => isVideo(url));
+          if (!hasVideo) setVideoThumbnail(undefined);
+          
+          return newAttachments;
+      });
+  };
+
+  const isVideo = (url: string) => {
+      return url.startsWith('data:video') || url.endsWith('.mp4') || url.endsWith('.mov') || url.endsWith('.webm');
+  };
+
+  // --- Mention Logic ---
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setContent(val);
@@ -121,6 +197,36 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
             className="w-full bg-transparent text-xl text-white placeholder-gray-500 border-none focus:ring-0 resize-none h-24 p-2 no-scrollbar outline-none"
           />
           
+          {/* Media Previews */}
+          {attachments.length > 0 && (
+              <div className="mb-3 grid grid-cols-2 gap-2 overflow-x-auto">
+                  {attachments.map((url, index) => (
+                      <div key={index} className="relative group rounded-xl overflow-hidden border border-twitter-border">
+                          {isVideo(url) ? (
+                              <div className="w-full h-48 bg-black relative">
+                                  <video 
+                                    src={url} 
+                                    className="w-full h-full object-cover" 
+                                    poster={videoThumbnail} // Show thumbnail in preview if available
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                      <PlayCircle className="w-10 h-10 text-white/80" />
+                                  </div>
+                              </div>
+                          ) : (
+                              <img src={url} className="w-full h-48 object-cover" alt="Preview" />
+                          )}
+                          <button 
+                            onClick={() => removeAttachment(index)}
+                            className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 hover:bg-black/90 transition-colors z-10"
+                          >
+                              <X className="w-4 h-4" />
+                          </button>
+                      </div>
+                  ))}
+              </div>
+          )}
+
           {/* Mention Dropdown */}
           {showMentions && filteredUsers.length > 0 && (
             <div className="absolute top-full left-0 bg-black border border-twitter-border rounded-xl shadow-2xl z-50 w-64 overflow-hidden max-h-60 overflow-y-auto">
@@ -200,7 +306,15 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
 
           <div className="border-t border-twitter-border pt-3 flex items-center justify-between">
             <div className="flex gap-1 text-twitter-accent">
-              <button className="p-2 rounded-full hover:bg-twitter-accent/10 transition-colors">
+              <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+              />
+              <button onClick={handleMediaClick} className="p-2 rounded-full hover:bg-twitter-accent/10 transition-colors" title="Media">
                 <Image className="w-5 h-5" />
               </button>
               <button className="p-2 rounded-full hover:bg-twitter-accent/10 transition-colors">
@@ -266,10 +380,10 @@ export const Composer: React.FC<ComposerProps> = ({ currentUser, onTweet }) => {
               )}
               <Button 
                 onClick={handleTweet} 
-                disabled={!content.trim() || isRefining || (showScheduler && !scheduleTime) || isOverLimit} 
+                disabled={(!content.trim() && attachments.length === 0) || isRefining || (showScheduler && !scheduleTime) || isOverLimit || isUploading} 
                 className="shadow-sm"
               >
-                {showScheduler && scheduleTime ? 'กำหนดเวลา' : 'โพสต์'}
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (showScheduler && scheduleTime ? 'กำหนดเวลา' : 'โพสต์')}
               </Button>
             </div>
           </div>

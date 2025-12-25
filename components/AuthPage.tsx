@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Apple, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { X, Apple, Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from './Button';
 import { User } from '../types';
 import { userService } from '../services/userService';
@@ -8,7 +8,7 @@ interface AuthPageProps {
   onLogin: (user: User) => void;
 }
 
-type AuthView = 'landing' | 'login_identifier' | 'login_password' | 'signup' | 'forgot-password';
+type AuthView = 'landing' | 'login_identifier' | 'login_password' | 'signup' | 'forgot-password' | 'verify_email';
 
 // Moved outside component to avoid recreation and potential type issues
 const Logo = () => (
@@ -70,6 +70,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   
+  // Verification
+  const [verificationCode, setVerificationCode] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
 
   // Clear errors when switching views
@@ -98,39 +101,67 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     setTimeout(() => {
         try {
             const user = userService.login(identifier, password);
-            onLogin(user);
+            if (!user.isEmailVerified) {
+                // If not verified, move to verify screen
+                setHandle(user.handle); // Ensure handle is set for verification
+                switchView('verify_email');
+                // Trigger resend immediately or just wait for user to ask?
+                // userService.resendVerificationEmail(user.handle); 
+            } else {
+                onLogin(user);
+            }
         } catch (err) {
             setError((err as Error).message);
+        } finally {
             setIsLoading(false);
         }
     }, 800);
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    setTimeout(() => {
-        try {
-            const newUser: User = {
-                name: name || 'ผู้ใช้ใหม่',
-                handle: handle || 'newuser',
-                email: identifier.includes('@') ? identifier : `${handle}@example.com`,
-                avatarUrl: `https://picsum.photos/seed/${handle}/200/200`,
-                joinedDate: `เข้าร่วมเมื่อ ${new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' })}`,
-                following: 0,
-                followers: 0,
-                isVerified: false
-            };
-            
-            const registeredUser = userService.register(newUser, password);
-            onLogin(registeredUser);
-        } catch (err) {
-            setError((err as Error).message);
-            setIsLoading(false);
-        }
-    }, 800);
+    try {
+        const newUser: User = {
+            name: name || 'ผู้ใช้ใหม่',
+            handle: handle || 'newuser',
+            email: identifier.includes('@') ? identifier : `${handle}@example.com`,
+            avatarUrl: `https://picsum.photos/seed/${handle}/200/200`,
+            joinedDate: `เข้าร่วมเมื่อ ${new Date().toLocaleString('th-TH', { month: 'long', year: 'numeric' })}`,
+            following: 0,
+            followers: 0,
+            isVerified: false
+        };
+        
+        await userService.register(newUser, password);
+        // Do NOT log in immediately. Move to verification.
+        setIsLoading(false);
+        switchView('verify_email');
+    } catch (err) {
+        setError((err as Error).message);
+        setIsLoading(false);
+    }
+  };
+
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoading(true);
+      setError(null);
+
+      try {
+          const user = await userService.verifyEmail(handle, verificationCode);
+          onLogin(user); // Now verified, log them in
+      } catch (err) {
+          setError((err as Error).message);
+          setIsLoading(false);
+      }
+  };
+
+  const handleResendCode = async () => {
+      await userService.resendVerificationEmail(handle);
+      alert('ส่งรหัสยืนยันใหม่ไปยังอีเมลของคุณแล้ว');
   };
 
   // --- Views ---
@@ -360,12 +391,67 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       </ScreenLayout>
   );
 
+  const renderVerifyEmail = () => (
+      <ScreenLayout onClose={() => switchView('landing')} showLogo={true}>
+          <div className="flex flex-col h-full pt-6">
+              <h1 className="text-[31px] leading-9 font-extrabold text-white mb-2">
+                  เราส่งรหัสให้คุณแล้ว
+              </h1>
+              <p className="text-twitter-gray text-[15px] mb-8">
+                  ป้อนรหัสยืนยันที่ส่งไปยังอีเมลของคุณเพื่อดำเนินการต่อ
+              </p>
+
+              <form onSubmit={handleVerificationSubmit} className="flex-1 flex flex-col">
+                  <div className="relative group mb-4">
+                      <input 
+                          type="text"
+                          required
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          className="peer w-full bg-black border border-twitter-border rounded pt-6 pb-2 px-3 text-white outline-none focus:border-twitter-accent focus:ring-1 focus:ring-twitter-accent transition-colors text-[17px]"
+                          placeholder=" "
+                          autoFocus
+                      />
+                      <label className="absolute left-3 top-2 text-xs text-twitter-gray transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-[17px] peer-focus:top-2 peer-focus:text-xs peer-focus:text-twitter-accent pointer-events-none">
+                          รหัสยืนยัน
+                      </label>
+                  </div>
+
+                  {error && (
+                      <div className="text-red-500 text-sm mb-4 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                          {error}
+                      </div>
+                  )}
+
+                  <div className="text-sm text-twitter-accent cursor-pointer hover:underline mb-8" onClick={handleResendCode}>
+                      ไม่ได้รับอีเมล?
+                  </div>
+
+                  <div className="flex-1"></div>
+
+                  <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-twitter-border bg-black sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:border-t-0 sm:p-0 sm:pb-8 sm:relative">
+                      <div className="flex items-center justify-end max-w-[364px] mx-auto w-full">
+                          <Button 
+                              type="submit" 
+                              disabled={isLoading || !verificationCode} 
+                              className="bg-white text-black hover:bg-gray-200 px-6 py-2 rounded-full font-bold w-full sm:w-auto"
+                          >
+                              {isLoading ? 'กำลังตรวจสอบ...' : 'ถัดไป'}
+                          </Button>
+                      </div>
+                  </div>
+              </form>
+          </div>
+      </ScreenLayout>
+  );
+
   return (
     <>
         {view === 'landing' && renderLanding()}
         {view === 'login_identifier' && renderLoginIdentifier()}
         {view === 'login_password' && renderLoginPassword()}
         {view === 'signup' && renderSignup()}
+        {view === 'verify_email' && renderVerifyEmail()}
     </>
   );
 };

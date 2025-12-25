@@ -1,11 +1,11 @@
 import React from 'react';
 
-export const formatText = (text: string) => {
+export const formatText = (text: string, onHashtagClick?: (tag: string) => void, onMentionClick?: (handle: string) => void) => {
   if (!text) return null;
   
   // Split by hashtags (#) or mentions (@) followed by word characters
-  // Capture the delimiter to include it in the parts array
-  const parts = text.split(/([#@][\w\u00C0-\u00FF]+)/g);
+  // Include Thai characters (\u0E00-\u0E7F) in the word character set
+  const parts = text.split(/([#@][\w\u00C0-\u00FF\u0E00-\u0E7F]+)/g);
 
   return parts.map((part, index) => {
     if (part.startsWith('#')) {
@@ -15,8 +15,11 @@ export const formatText = (text: string) => {
           className="text-twitter-accent hover:underline cursor-pointer font-normal"
           onClick={(e) => {
             e.stopPropagation();
-            console.log(`Clicked hashtag: ${part}`);
-            // In a real app, this would navigate to a hashtag search page
+            if (onHashtagClick) {
+                onHashtagClick(part);
+            } else {
+                console.log(`Clicked hashtag: ${part}`);
+            }
           }}
         >
           {part}
@@ -30,7 +33,11 @@ export const formatText = (text: string) => {
             className="text-twitter-accent hover:underline cursor-pointer font-normal"
             onClick={(e) => {
                 e.stopPropagation();
-                console.log(`Clicked mention: ${part}`);
+                if (onMentionClick) {
+                    onMentionClick(part);
+                } else {
+                    console.log(`Clicked mention: ${part}`);
+                }
              }}
         >
             {part}

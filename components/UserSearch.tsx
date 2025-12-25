@@ -14,7 +14,11 @@ const SEARCH_USERS = [
   { name: 'Vercel', handle: 'vercel', avatarUrl: 'https://picsum.photos/seed/vercel/200/200', bio: 'Develop. Preview. Ship.' },
 ];
 
-export const UserSearch: React.FC = () => {
+interface UserSearchProps {
+    onUserClick?: (handle: string) => void;
+}
+
+export const UserSearch: React.FC<UserSearchProps> = ({ onUserClick }) => {
   const [query, setQuery] = useState('');
   
   const filteredUsers = query 
@@ -56,7 +60,11 @@ export const UserSearch: React.FC = () => {
         {query ? (
           filteredUsers.length > 0 ? (
             filteredUsers.map(user => (
-              <div key={user.handle} className="px-4 py-4 border-b border-twitter-border hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-3">
+              <div 
+                key={user.handle} 
+                className="px-4 py-4 border-b border-twitter-border hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-3"
+                onClick={() => onUserClick && onUserClick(user.handle)}
+              >
                 <img src={user.avatarUrl} alt={user.name} className="w-12 h-12 rounded-full object-cover" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
@@ -64,7 +72,7 @@ export const UserSearch: React.FC = () => {
                        <div className="font-bold text-white">{user.name}</div>
                        <div className="text-twitter-gray">@{user.handle}</div>
                      </div>
-                     <Button size="sm" variant="secondary">Follow</Button>
+                     <Button size="sm" variant="secondary" onClick={(e) => e.stopPropagation()}>Follow</Button>
                   </div>
                   {user.bio && <div className="text-white mt-1 text-sm line-clamp-2">{user.bio}</div>}
                 </div>

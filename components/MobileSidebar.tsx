@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, X, Users, Bookmark, FileText, Mic, BadgeDollarSign, Settings, HelpCircle, Sun, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
-import { User as UserType, NavigationItem } from '../types';
+import { User as UserType, NavigationItem, SiteConfig } from '../types';
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -8,9 +8,10 @@ interface MobileSidebarProps {
   user: UserType;
   onNavigate: (item: NavigationItem) => void;
   onLogout: () => void;
+  siteConfig: SiteConfig | null;
 }
 
-export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose, user, onNavigate, onLogout }) => {
+export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose, user, onNavigate, onLogout, siteConfig }) => {
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
   // Close sidebar when navigating
@@ -41,7 +42,10 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose, u
                className="w-10 h-10 rounded-full object-cover border border-twitter-border cursor-pointer"
                onClick={() => handleNav(NavigationItem.PROFILE)}
              />
-             {/* Optional: Add a close button or switcher here if needed, but standard UI usually just taps backdrop or swipe */}
+             {/* Dynamic Logo in Mobile Sidebar */}
+             {siteConfig?.logoUrl && (
+                 <img src={siteConfig.logoUrl} alt="Logo" className="w-8 h-8 object-contain" />
+             )}
            </div>
            
            <div className="mb-4">

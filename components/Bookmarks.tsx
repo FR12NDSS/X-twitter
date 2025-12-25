@@ -8,9 +8,11 @@ interface BookmarksProps {
   onReply: (tweet: TweetData) => void;
   onClick: (tweet: TweetData) => void;
   onBookmark: (tweetId: string) => void;
+  onHashtagClick?: (tag: string) => void;
+  onUserClick?: (handle: string) => void;
 }
 
-export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, onBookmark }) => {
+export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, onBookmark, onHashtagClick, onUserClick }) => {
   const bookmarkedTweets = tweets.filter(t => t.isBookmarked);
 
   return (
@@ -29,6 +31,8 @@ export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, 
               onReply={onReply}
               onClick={onClick}
               onBookmark={onBookmark}
+              onHashtagClick={onHashtagClick}
+              onUserClick={onUserClick}
             />
           ))
         ) : (
