@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Repeat2, Heart, Share, BarChart2, BadgeCheck, CalendarClock, PenLine, Link, Bookmark, Trash2, MoreHorizontal, UserPlus, UserMinus, Frown, Undo2 } from 'lucide-react';
+import { MessageCircle, Repeat2, Heart, Share, BarChart2, BadgeCheck, CalendarClock, PenLine, Link, Bookmark, MoreHorizontal, UserPlus, UserMinus, Frown, Undo2 } from 'lucide-react';
 import { TweetData } from '../types';
 import { formatText } from '../utils/textUtils';
 import { MOCK_USERS } from '../utils/mockData';
@@ -202,13 +202,9 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
         
         if (newFollowState) {
             user.followers += 1;
-            console.log(`Followed ${user.handle}. Followers: ${user.followers}`);
         } else {
             user.followers -= 1;
-            console.log(`Unfollowed ${user.handle}. Followers: ${user.followers}`);
         }
-    } else {
-        console.warn(`User @${tweet.authorHandle} not found in mock data, but local state updated.`);
     }
 
     showUndoNotification('follow', newFollowState ? 'followed' : 'unfollowed');
@@ -253,6 +249,55 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
     }).format(num);
   };
 
+  // Helper to render image grid
+  const renderImages = () => {
+    if (!tweet.images || tweet.images.length === 0) return null;
+
+    const count = tweet.images.length;
+
+    if (count === 1) {
+        return (
+            <div className="mt-3 rounded-2xl overflow-hidden border border-twitter-border/50">
+                <img src={tweet.images[0]} className="w-full h-auto max-h-[500px] object-cover" alt="" />
+            </div>
+        );
+    }
+
+    if (count === 2) {
+        return (
+            <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
+                <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
+                <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
+            </div>
+        );
+    }
+
+    if (count === 3) {
+        return (
+            <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
+                <div className="relative">
+                    <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
+                </div>
+                <div className="grid grid-rows-2 gap-0.5 h-full">
+                    <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
+                    <img src={tweet.images[2]} className="w-full h-full object-cover" alt="" />
+                </div>
+            </div>
+        );
+    }
+
+    if (count >= 4) {
+        return (
+            <div className="mt-3 grid grid-cols-2 grid-rows-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
+                <img src={tweet.images[0]} className="w-full h-full object-cover" alt="" />
+                <img src={tweet.images[1]} className="w-full h-full object-cover" alt="" />
+                <img src={tweet.images[2]} className="w-full h-full object-cover" alt="" />
+                <img src={tweet.images[3]} className="w-full h-full object-cover" alt="" />
+            </div>
+        );
+    }
+  };
+
   // Ensure view count has a fallback if data is missing
   const displayViews = tweet.views || (tweet.likes * 42) || 0;
 
@@ -291,16 +336,6 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                     </div>
                     ) : (
                     <span className="text-twitter-gray hover:underline flex-shrink-0">{tweet.timestamp}</span>
-                    )}
-
-                    {/* Follow Button (Visible if not following) */}
-                    {!isFollowing && (
-                        <button 
-                            onClick={handleFollowUser}
-                            className="ml-2 text-twitter-accent text-xs font-bold hover:bg-twitter-accent/10 px-2 py-0.5 rounded-full transition-colors z-10"
-                        >
-                            Follow
-                        </button>
                     )}
                 </div>
 
@@ -347,13 +382,32 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
             </div>
 
             {/* Text */}
-            <div className="text-[15px] text-white whitespace-pre-wrap leading-normal mb-3">
+            <div className="text-[15px] text-white whitespace-pre-wrap leading-normal mb-1">
                 {formatText(tweet.content)}
+                {tweet.hashtags && tweet.hashtags.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-2 pt-1">
+                        {tweet.hashtags.map((tag, i) => (
+                            <span 
+                                key={i} 
+                                className="text-twitter-accent hover:underline cursor-pointer font-normal"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log(`Clicked hashtag: ${tag}`);
+                                }}
+                            >
+                                {tag.startsWith('#') ? tag : `#${tag}`}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
+
+            {/* Images */}
+            {renderImages()}
 
             {/* Quoted Tweet */}
             {tweet.quotedTweet && (
-                <div className="mt-2 mb-3 border border-twitter-border rounded-xl p-3 hover:bg-white/5 transition-colors cursor-pointer overflow-hidden" onClick={(e) => {
+                <div className="mt-3 mb-3 border border-twitter-border rounded-xl p-3 hover:bg-white/5 transition-colors cursor-pointer overflow-hidden" onClick={(e) => {
                     e.stopPropagation();
                     if (onClick) onClick(tweet.quotedTweet!);
                 }}>
@@ -364,11 +418,17 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, onReply, onClick, o
                         <span className="text-twitter-gray text-sm">· {tweet.quotedTweet.timestamp}</span>
                     </div>
                     <div className="text-white text-sm whitespace-pre-wrap">{formatText(tweet.quotedTweet.content)}</div>
+                    {/* Render images for quoted tweet as well, but smaller/simpler */}
+                    {tweet.quotedTweet.images && tweet.quotedTweet.images.length > 0 && (
+                        <div className="mt-2 rounded-lg overflow-hidden border border-twitter-border/50 h-32">
+                            <img src={tweet.quotedTweet.images[0]} className="w-full h-full object-cover" alt="" />
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* Actions */}
-            <div className="flex justify-between items-center text-twitter-gray max-w-md relative">
+            <div className="flex justify-between items-center text-twitter-gray max-w-md relative mt-3">
                 
                 {/* Reply */}
                 <button 

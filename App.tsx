@@ -24,7 +24,8 @@ import { AuthPage } from './components/AuthPage';
 import { TweetData, NavigationItem, User, TweetComment } from './types';
 import { generateFeed } from './services/geminiService';
 import { userService } from './services/userService';
-import { Loader2, RefreshCcw, ArrowLeft } from 'lucide-react';
+import { Loader2, RefreshCcw, ArrowLeft, MoreVertical } from 'lucide-react';
+import { Button } from './components/Button';
 
 const generateMockComments = (tweetId: string): TweetComment[] => [
   {
@@ -355,55 +356,74 @@ const App: React.FC = () => {
       default:
         return (
           <>
-            {/* Sticky Header */}
-            <div className="sticky top-0 z-20 backdrop-blur-md bg-black/60 border-b border-twitter-border px-4 py-3 flex items-center">
-               {/* Mobile Avatar Link */}
-               <div className="sm:hidden mr-3">
-                 <button onClick={() => setActiveTab(NavigationItem.PROFILE)} className="block rounded-full overflow-hidden">
-                   <img 
-                     src={currentUser.avatarUrl} 
-                     alt="Profile" 
-                     className="w-8 h-8 object-cover"
-                   />
-                 </button>
-               </div>
-               
-               <h1 className="text-xl font-bold flex-1 cursor-pointer" onClick={scrollToComposer}>Home</h1>
-               
-               <div className="flex items-center">
-                 <button onClick={refreshFeed} disabled={loading} className="p-2 hover:bg-twitter-gray/20 rounded-full transition-colors">
-                   <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                 </button>
-               </div>
+            {/* Header Structure */}
+            <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-md border-b border-twitter-border transition-all">
+                {/* Top Bar (Avatar, Logo, Upgrade) - Visible mostly on Mobile, Logo on Desktop */}
+                <div className="flex items-center justify-between px-4 h-[53px]">
+                    {/* Left: Avatar (Mobile Only) */}
+                    <div className="w-[56px]">
+                        <div className="sm:hidden">
+                             <button onClick={() => setActiveTab(NavigationItem.PROFILE)} className="block rounded-full overflow-hidden">
+                               <img 
+                                 src={currentUser.avatarUrl} 
+                                 alt="Profile" 
+                                 className="w-8 h-8 object-cover"
+                               />
+                             </button>
+                        </div>
+                    </div>
+
+                    {/* Center: Logo */}
+                    <div className="flex justify-center" onClick={scrollToComposer}>
+                         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 text-white fill-current cursor-pointer">
+                            <g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g>
+                        </svg>
+                    </div>
+
+                    {/* Right: Upgrade & Menu */}
+                    <div className="flex items-center justify-end gap-3 w-[56px]">
+                        <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="hidden sm:flex h-8 px-3 text-xs font-bold"
+                            onClick={() => setActiveTab(NavigationItem.PREMIUM)}
+                        >
+                            Upgrade
+                        </Button>
+                         <button onClick={refreshFeed} disabled={loading} className="p-2 -mr-2 text-white rounded-full hover:bg-white/10 transition-colors">
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MoreVertical className="w-5 h-5" />}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Tab Selection OR Trend Header */}
+                {currentTrend ? (
+                    <div className="flex items-center gap-4 px-4 py-3 animate-in fade-in slide-in-from-top-1">
+                        <button 
+                            onClick={handleClearTrend}
+                            className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-white" />
+                        </button>
+                        <div className="flex flex-col">
+                            <h2 className="text-lg font-bold text-white leading-tight">
+                                {currentTrend}
+                            </h2>
+                            <span className="text-xs text-twitter-gray">Trending Topic</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex">
+                        <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4 relative">
+                            <span className="font-bold text-white">For you</span>
+                            <div className="absolute bottom-0 h-1 w-14 bg-twitter-accent rounded-full"></div>
+                        </div>
+                        <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4">
+                            <span className="text-twitter-gray font-medium">Following</span>
+                        </div>
+                    </div>
+                )}
             </div>
-    
-            {/* Tab Selection OR Trend Header */}
-            {currentTrend ? (
-                <div className="flex items-center gap-4 border-b border-twitter-border sticky top-[53px] z-20 bg-black/60 backdrop-blur-md px-4 py-3 animate-in fade-in slide-in-from-top-1">
-                    <button 
-                        onClick={handleClearTrend}
-                        className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-white" />
-                    </button>
-                    <div className="flex flex-col">
-                        <h2 className="text-lg font-bold text-white leading-tight">
-                            {currentTrend}
-                        </h2>
-                        <span className="text-xs text-twitter-gray">Trending Topic</span>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex border-b border-twitter-border sticky top-[53px] z-20 bg-black/60 backdrop-blur-md">
-                    <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4 relative">
-                        <span className="font-bold text-white">For you</span>
-                        <div className="absolute bottom-0 h-1 w-14 bg-twitter-accent rounded-full"></div>
-                    </div>
-                    <div className="flex-1 hover:bg-white/5 transition-colors cursor-pointer flex justify-center py-4">
-                        <span className="text-twitter-gray font-medium">Following</span>
-                    </div>
-                </div>
-            )}
     
             {/* Compose Tweet (Only show if not in trend mode, or keep it? Standard Twitter keeps it) */}
             <Composer currentUser={currentUser} onTweet={handleTweet} />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Apple, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { X, Apple, Eye, EyeOff } from 'lucide-react';
 import { Button } from './Button';
 import { User } from '../types';
 import { userService } from '../services/userService';
@@ -37,7 +37,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
     
-    // Simulate network delay for UX
     setTimeout(() => {
         try {
             const user = userService.login(email, password);
@@ -55,7 +54,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError(null);
 
-    // Simulate network delay for UX
     setTimeout(() => {
         try {
             const newUser: User = {
@@ -96,9 +94,41 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     </svg>
   );
 
-  // --- Sub-Components for Views ---
+  const ModalLayout = ({ title, children }: { title?: string, children?: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/20 backdrop-blur-sm p-4">
+        <div className="bg-black w-full max-w-[600px] h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl shadow-2xl border border-twitter-border flex flex-col relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 h-[53px]">
+                <div className="w-[56px] flex items-center">
+                    <button onClick={() => switchView('landing')} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
+                        <X className="w-5 h-5 text-white" />
+                    </button>
+                </div>
+                <div className="flex-1 flex justify-center">
+                    <Logo />
+                </div>
+                <div className="w-[56px]"></div> {/* Spacer */}
+            </div>
 
-  const LandingView = () => (
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto px-8 pb-12 sm:px-16">
+                 <div className="max-w-[364px] mx-auto w-full pt-6">
+                    {title && <h2 className="text-3xl font-bold text-white mb-8">{title}</h2>}
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded mb-4 text-sm font-bold">
+                            {error}
+                        </div>
+                    )}
+                    {children}
+                 </div>
+            </div>
+        </div>
+    </div>
+  );
+
+  // Render Functions (Instead of nested components)
+  
+  const renderLanding = () => (
     <div className="flex flex-col md:flex-row h-screen w-full bg-black">
       {/* Left Side (Image/Logo) */}
       <div className="flex-1 flex items-center justify-center bg-twitter-card/20 p-8 relative overflow-hidden">
@@ -159,39 +189,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     </div>
   );
 
-  const ModalLayout = ({ title, children }: { title?: string, children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/20 backdrop-blur-sm p-4">
-        <div className="bg-black w-full max-w-[600px] h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl shadow-2xl border border-twitter-border flex flex-col relative">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 h-[53px]">
-                <div className="w-[56px] flex items-center">
-                    <button onClick={() => switchView('landing')} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
-                        <X className="w-5 h-5 text-white" />
-                    </button>
-                </div>
-                <div className="flex-1 flex justify-center">
-                    <Logo />
-                </div>
-                <div className="w-[56px]"></div> {/* Spacer */}
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto px-8 pb-12 sm:px-16">
-                 <div className="max-w-[364px] mx-auto w-full pt-6">
-                    {title && <h2 className="text-3xl font-bold text-white mb-8">{title}</h2>}
-                    {error && (
-                        <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded mb-4 text-sm font-bold">
-                            {error}
-                        </div>
-                    )}
-                    {children}
-                 </div>
-            </div>
-        </div>
-    </div>
-  );
-
-  const LoginView = () => (
+  const renderLogin = () => (
       <ModalLayout title="Sign in to BuzzStream">
         <form onSubmit={handleLoginSubmit} className="flex flex-col gap-6">
             <button type="button" className="bg-white text-black font-bold rounded-full py-2.5 px-4 flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
@@ -246,7 +244,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                  </div>
             </div>
 
-            <Button disabled={isLoading} fullWidth size="lg" className="bg-white text-black hover:bg-gray-200 mt-2">
+            <Button type="submit" disabled={isLoading} fullWidth size="lg" className="bg-white text-black hover:bg-gray-200 mt-2">
                 {isLoading ? 'Logging in...' : 'Log In'}
             </Button>
 
@@ -262,7 +260,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       </ModalLayout>
   );
 
-  const SignupView = () => (
+  const renderSignup = () => (
       <ModalLayout title="Create your account">
          <form onSubmit={handleSignupSubmit} className="flex flex-col gap-6">
              <div className="space-y-4">
@@ -323,16 +321,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                  </div>
             </div>
 
-            <div className="flex-1"></div> {/* Spacer to push button down if needed */}
+            <div className="flex-1"></div>
 
-            <Button disabled={isLoading} fullWidth size="lg" className="bg-twitter-accent hover:bg-twitter-hover text-white mt-8">
+            <Button type="submit" disabled={isLoading} fullWidth size="lg" className="bg-twitter-accent hover:bg-twitter-hover text-white mt-8">
                 {isLoading ? 'Creating account...' : 'Sign Up'}
             </Button>
          </form>
       </ModalLayout>
   );
 
-  const ForgotPasswordView = () => (
+  const renderForgotPassword = () => (
       <ModalLayout title="Find your BuzzStream account">
          <form onSubmit={handleForgotPassword} className="flex flex-col gap-6">
             <p className="text-twitter-gray">
@@ -356,7 +354,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
             <div className="flex-1"></div> 
 
-            <Button disabled={isLoading} fullWidth size="lg" className="bg-white text-black hover:bg-gray-200 mt-8">
+            <Button type="submit" disabled={isLoading} fullWidth size="lg" className="bg-white text-black hover:bg-gray-200 mt-8">
                 {isLoading ? 'Sending...' : 'Next'}
             </Button>
          </form>
@@ -365,10 +363,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   return (
     <>
-        {view === 'landing' && <LandingView />}
-        {view === 'login' && <LoginView />}
-        {view === 'signup' && <SignupView />}
-        {view === 'forgot-password' && <ForgotPasswordView />}
+        {view === 'landing' && renderLanding()}
+        {view === 'login' && renderLogin()}
+        {view === 'signup' && renderSignup()}
+        {view === 'forgot-password' && renderForgotPassword()}
     </>
   );
 };

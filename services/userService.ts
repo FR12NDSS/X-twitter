@@ -19,8 +19,19 @@ class UserService {
   private init() {
     const storedUsers = localStorage.getItem(USERS_KEY);
     if (storedUsers) {
-      this.users = JSON.parse(storedUsers);
+      try {
+        this.users = JSON.parse(storedUsers);
+      } catch (e) {
+        console.error("Failed to parse users from local storage", e);
+        // Fallback: Clear invalid data and re-seed
+        this.seedUsers();
+      }
     } else {
+      this.seedUsers();
+    }
+  }
+
+  private seedUsers() {
       // Seed with mock users if empty
       // Default password for mock users is 'password'
       const seededUsers = MOCK_USERS.map(user => ({
@@ -46,7 +57,6 @@ class UserService {
 
       this.users = seededUsers;
       this.saveUsers();
-    }
   }
 
   private saveUsers() {

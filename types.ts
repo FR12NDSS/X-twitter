@@ -25,6 +25,8 @@ export interface TweetData {
   isBookmarked?: boolean;
   comments?: TweetComment[];
   quotedTweet?: TweetData; // New property for Quote Tweets
+  images?: string[]; // Support for post images
+  hashtags?: string[]; // Support for hashtags
 }
 
 export interface User {
