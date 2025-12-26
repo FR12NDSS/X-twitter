@@ -78,6 +78,7 @@ export interface User {
   handle: string;
   avatarUrl: string;
   email?: string; // Added for auth
+  phone?: string; // Added for auth
   bannerUrl?: string;
   bio?: string;
   location?: string;

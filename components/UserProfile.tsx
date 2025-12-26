@@ -223,9 +223,10 @@ interface UserProfileProps {
   onReply?: (tweet: TweetData) => void;
   onHashtagClick?: (tag: string) => void;
   onUserClick?: (handle: string) => void;
+  onDelete?: (tweetId: string) => void;
 }
 
-export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, tweets, onBack, loading = false, onUpdateProfile, onReply, onHashtagClick, onUserClick }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, tweets, onBack, loading = false, onUpdateProfile, onReply, onHashtagClick, onUserClick, onDelete }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(user.followers || 0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -336,9 +337,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
               <TweetCard 
                 key={tweet.id} 
                 tweet={tweet} 
+                currentUser={currentUser}
                 onReply={onReply} 
                 onHashtagClick={onHashtagClick}
                 onUserClick={onUserClick}
+                onDelete={onDelete}
               />
             ))}
             {tweets.length === 0 && (

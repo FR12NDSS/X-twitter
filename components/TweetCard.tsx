@@ -7,7 +7,7 @@ import { formatText } from '../utils/textUtils';
 import { 
   Building, Crown, PlayCircle, CalendarClock, MoreHorizontal, Frown, 
   UserMinus, UserPlus, BarChart2, MessageCircle, Repeat2, PenLine, Heart, 
-  Share, Link, Bookmark, Megaphone, Undo2, Pin
+  Share, Link, Bookmark, Megaphone, Undo2, Pin, Trash2
 } from 'lucide-react';
 
 interface TweetCardProps {
@@ -20,10 +20,11 @@ interface TweetCardProps {
   onAnalytics?: (tweet: TweetData) => void;
   onHashtagClick?: (tag: string) => void;
   onUserClick?: (handle: string) => void;
-  onPin?: (tweetId: string, type: 'user' | 'admin') => void; // New pin handler
+  onPin?: (tweetId: string, type: 'user' | 'admin') => void;
+  onDelete?: (tweetId: string) => void; // New delete prop
 }
 
-export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick, onPin }) => {
+export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick, onPin, onDelete }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(tweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
@@ -65,6 +66,9 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const isAdminPinned = tweet.isPinned && tweet.pinnedBy === 'admin';
   const isUserPinned = tweet.isPinned && tweet.pinnedBy === 'user';
   
+  // Check if user can delete (Owner or Admin)
+  const canDelete = currentUser && (currentUser.handle === tweet.authorHandle || currentUser.isAdmin);
+
   // Card Styling based on Pin Status
   const cardBorderClass = isAdminPinned 
     ? 'border-2 border-red-500 bg-red-900/10' 
@@ -245,6 +249,14 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
       e.stopPropagation();
       if (onPin) {
           onPin(tweet.id, type);
+      }
+      setShowMoreMenu(false);
+  };
+
+  const handleDeleteAction = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (confirm('คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?')) {
+          if (onDelete) onDelete(tweet.id);
       }
       setShowMoreMenu(false);
   };
@@ -430,6 +442,16 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                     {/* Dropdown */}
                     {showMoreMenu && (
                         <div className="absolute top-6 right-0 bg-black border border-twitter-border rounded-xl shadow-[0_0_10px_rgba(255,255,255,0.2)] z-50 w-56 overflow-hidden">
+                            {/* Delete Option (For Author or Admin) */}
+                            {canDelete && (
+                                <div 
+                                    onClick={handleDeleteAction}
+                                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-red-500 text-[15px]"
+                                >
+                                    <Trash2 className="w-4 h-4" /> ลบโพสต์
+                                </div>
+                            )}
+
                             {/* Pin Options */}
                             {currentUser?.isAdmin && (
                                 <div 

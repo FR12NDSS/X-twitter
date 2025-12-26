@@ -1,7 +1,8 @@
 import React from 'react';
-import { TweetData } from '../types';
+import { TweetData, User } from '../types';
 import { TweetCard } from './TweetCard';
 import { Bookmark } from 'lucide-react';
+import { userService } from '../services/userService';
 
 interface BookmarksProps {
   tweets: TweetData[];
@@ -10,10 +11,12 @@ interface BookmarksProps {
   onBookmark: (tweetId: string) => void;
   onHashtagClick?: (tag: string) => void;
   onUserClick?: (handle: string) => void;
+  onDelete?: (tweetId: string) => void;
 }
 
-export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, onBookmark, onHashtagClick, onUserClick }) => {
+export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, onBookmark, onHashtagClick, onUserClick, onDelete }) => {
   const bookmarkedTweets = tweets.filter(t => t.isBookmarked);
+  const currentUser = userService.getSession();
 
   return (
     <div>
@@ -28,11 +31,13 @@ export const Bookmarks: React.FC<BookmarksProps> = ({ tweets, onReply, onClick, 
             <TweetCard 
               key={tweet.id} 
               tweet={tweet} 
+              currentUser={currentUser}
               onReply={onReply}
               onClick={onClick}
               onBookmark={onBookmark}
               onHashtagClick={onHashtagClick}
               onUserClick={onUserClick}
+              onDelete={onDelete}
             />
           ))
         ) : (

@@ -63,7 +63,7 @@ const generateMockComments = (tweetId: string): TweetComment[] => [
 const App: React.FC = () => {
   // Check if system is installed
   const [isSystemChecked, setIsSystemChecked] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true); // Default to true to show Login immediately
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   
   // Auth state
@@ -96,22 +96,23 @@ const App: React.FC = () => {
   useEffect(() => {
     const initSystem = async () => {
         const installed = await userService.checkInstallationStatus();
-        setIsConfigured(installed);
-        
+        // If not installed in localstorage but code defaults to true, we respect the check
+        // However, for this demo request, we force True initially in state declaration
+        // Here we just load config if available
         if (installed) {
             const config = userService.getSiteConfig();
             setSiteConfig(config);
-            // Set Document Title
             if (config?.siteName) {
                 document.title = config.siteName;
             }
-
-            const sessionUser = userService.getSession();
-            if (sessionUser) {
-                setCurrentUser(sessionUser);
-                setIsAuthenticated(true);
-            }
         }
+
+        const sessionUser = userService.getSession();
+        if (sessionUser) {
+            setCurrentUser(sessionUser);
+            setIsAuthenticated(true);
+        }
+        
         setIsSystemChecked(true);
     };
     initSystem();
@@ -215,9 +216,14 @@ const App: React.FC = () => {
       userService.configureSite(newConfig);
   };
 
-  // Admin: Delete Tweet
+  // General Delete Tweet (Used by Admin and User)
   const handleDeleteTweet = (tweetId: string) => {
       setTweets(prev => prev.filter(t => t.id !== tweetId));
+      
+      // If currently viewing the tweet being deleted, go back to feed
+      if (selectedTweet && selectedTweet.id === tweetId) {
+          setSelectedTweet(null);
+      }
   };
 
   // Admin: Promote Tweet
@@ -425,10 +431,12 @@ const App: React.FC = () => {
       return (
         <TweetDetail 
           tweet={selectedTweet}
+          currentUser={currentUser}
           onBack={handleBackToFeed}
           onReply={handleReplyClick}
           onHashtagClick={handleTrendClick}
           onUserClick={handleUserClick}
+          onDelete={handleDeleteTweet}
         />
       );
     }
@@ -449,6 +457,7 @@ const App: React.FC = () => {
                 onReply={handleReplyClick}
                 onHashtagClick={handleTrendClick}
                 onUserClick={handleUserClick}
+                onDelete={handleDeleteTweet}
             />
         );
     }
@@ -468,6 +477,7 @@ const App: React.FC = () => {
             onReply={handleReplyClick}
             onHashtagClick={handleTrendClick}
             onUserClick={handleUserClick}
+            onDelete={handleDeleteTweet}
           />
         );
       case NavigationItem.EXPLORE:
@@ -485,6 +495,7 @@ const App: React.FC = () => {
                 onBookmark={handleBookmarkToggle}
                 onHashtagClick={handleTrendClick}
                 onUserClick={handleUserClick}
+                onDelete={handleDeleteTweet}
             />
         );
       case NavigationItem.LISTS:
@@ -635,6 +646,7 @@ const App: React.FC = () => {
                     onHashtagClick={handleTrendClick}
                     onUserClick={handleUserClick}
                     onPin={handlePinTweet}
+                    onDelete={handleDeleteTweet}
                   />
                 ))
               )}

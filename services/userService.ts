@@ -383,7 +383,8 @@ class UserService {
               id INT AUTO_INCREMENT PRIMARY KEY,
               name VARCHAR(255) NOT NULL,
               handle VARCHAR(50) UNIQUE NOT NULL,
-              email VARCHAR(255) UNIQUE NOT NULL,
+              email VARCHAR(255),
+              phone VARCHAR(50) UNIQUE,
               password VARCHAR(255) NOT NULL,
               avatar_url TEXT,
               banner_url TEXT,
@@ -412,6 +413,8 @@ class UserService {
               video_thumbnail TEXT,
               is_scheduled BOOLEAN DEFAULT FALSE,
               scheduled_for DATETIME,
+              is_pinned BOOLEAN DEFAULT FALSE,
+              pinned_by ENUM('user', 'admin'),
               is_promoted BOOLEAN DEFAULT FALSE,
               likes INT DEFAULT 0,
               retweets INT DEFAULT 0,
@@ -545,10 +548,24 @@ class UserService {
 
   // --- Auth Methods ---
 
+  public isHandleTaken(handle: string): boolean {
+      return this.users.some(u => u.handle.toLowerCase() === handle.toLowerCase());
+  }
+
+  public isEmailTaken(email: string): boolean {
+      return this.users.some(u => u.email?.toLowerCase() === email.toLowerCase());
+  }
+
+  public isPhoneTaken(phone: string): boolean {
+      return this.users.some(u => u.phone === phone);
+  }
+
   public async register(user: User, password: string): Promise<User> {
-    // Check duplication
-    if (this.users.some(u => u.email === user.email)) throw new Error('Email already registered');
-    if (this.users.some(u => u.handle.toLowerCase() === user.handle.toLowerCase())) throw new Error('Username is already taken');
+    // Basic checks
+    if (this.isHandleTaken(user.handle)) throw new Error('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
+    
+    if (user.email && this.isEmailTaken(user.email)) throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
+    if (user.phone && this.isPhoneTaken(user.phone)) throw new Error('เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว');
 
     const verificationCode = this.generateVerificationCode();
 
@@ -570,19 +587,25 @@ class UserService {
     this.users.push(newUser);
     this.saveUsers();
     
-    // Simulate sending email
-    const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
-    let subject = this.emailConfig.verification.subject;
-    let body = this.emailConfig.verification.body;
+    // Simulate sending email only if email exists
+    if (newUser.email) {
+        const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
+        let subject = this.emailConfig.verification.subject;
+        let body = this.emailConfig.verification.body;
 
-    // Replace Placeholders
-    subject = subject.replace('{siteName}', siteName).replace('{name}', user.name);
-    body = body.replace('{siteName}', siteName)
-               .replace('{name}', user.name)
-               .replace('{code}', verificationCode)
-               .replace('{handle}', user.handle);
+        // Replace Placeholders
+        subject = subject.replace('{siteName}', siteName).replace('{name}', user.name);
+        body = body.replace('{siteName}', siteName)
+                .replace('{name}', user.name)
+                .replace('{code}', verificationCode)
+                .replace('{handle}', user.handle);
 
-    await this.mockSendEmail(newUser.email || '', subject, body);
+        await this.mockSendEmail(newUser.email, subject, body);
+    } else {
+        // SMS simulation would go here
+        console.log(`[MOCK SMS] Sending code ${verificationCode} to ${newUser.phone}`);
+        await new Promise(resolve => setTimeout(resolve, 800));
+    }
 
     // Note: Do not auto-login fully here, we return user to handle verification flow
     const { password: _, verificationToken: __, ...safeUser } = newUser;
@@ -624,25 +647,31 @@ class UserService {
           }
       }
 
-      const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
-      let subject = this.emailConfig.verification.subject;
-      let body = this.emailConfig.verification.body;
+      if (user.email) {
+          const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
+          let subject = this.emailConfig.verification.subject;
+          let body = this.emailConfig.verification.body;
 
-      subject = subject.replace('{siteName}', siteName).replace('{name}', user.name);
-      body = body.replace('{siteName}', siteName)
-               .replace('{name}', user.name)
-               .replace('{code}', code)
-               .replace('{handle}', user.handle);
+          subject = subject.replace('{siteName}', siteName).replace('{name}', user.name);
+          body = body.replace('{siteName}', siteName)
+                  .replace('{name}', user.name)
+                  .replace('{code}', code)
+                  .replace('{handle}', user.handle);
 
-      await this.mockSendEmail(user.email || '', subject, body);
+          await this.mockSendEmail(user.email, subject, body);
+      } else if (user.phone) {
+          console.log(`[MOCK SMS] Resending code ${code} to ${user.phone}`);
+          await new Promise(resolve => setTimeout(resolve, 800));
+      }
   }
 
-  public login(email: string, password: string): User {
+  public login(identifier: string, password: string): User {
+    // Identifier can be email, handle, or phone
     const user = this.users.find(u => 
-      (u.email === email || u.handle === email) && u.password === password
+      (u.email === identifier || u.handle === identifier || u.phone === identifier) && u.password === password
     );
 
-    if (!user) throw new Error('Invalid email or password');
+    if (!user) throw new Error('ข้อมูลเข้าสู่ระบบไม่ถูกต้อง');
     
     // Allow login even if not verified? Usually no.
     // For this demo, let's say "Login" succeeds but App should check isEmailVerified
@@ -674,13 +703,15 @@ class UserService {
       const currentAdminStatus = this.users[index].isAdmin;
       const currentToken = this.users[index].verificationToken;
       const currentEmailVerified = this.users[index].isEmailVerified;
+      const currentPhone = this.users[index].phone;
       
       this.users[index] = { 
           ...updatedUser, 
           password: currentPassword,
           isAdmin: currentAdminStatus,
           verificationToken: currentToken,
-          isEmailVerified: currentEmailVerified
+          isEmailVerified: currentEmailVerified,
+          phone: updatedUser.phone || currentPhone // Preserve phone if not explicitly updated to empty
       };
       
       // If we are updating the current logged in user, refresh session

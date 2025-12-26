@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
-import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, Heart, Share, BarChart2 } from 'lucide-react';
-import { TweetData, TweetComment } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, MoreHorizontal, MessageCircle, Repeat2, Heart, Share, BarChart2, Trash2 } from 'lucide-react';
+import { TweetData, TweetComment, User } from '../types';
 import { VerifiedBadge } from './VerifiedBadge';
 import { Button } from './Button';
 import { formatText } from '../utils/textUtils';
 
 interface TweetDetailProps {
   tweet: TweetData;
+  currentUser?: User | null;
   onBack: () => void;
   onReply: (tweet: TweetData) => void;
   onHashtagClick?: (tag: string) => void;
   onUserClick?: (handle: string) => void;
+  onDelete?: (tweetId: string) => void;
 }
 
-export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply, onHashtagClick, onUserClick }) => {
+export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, onBack, onReply, onHashtagClick, onUserClick, onDelete }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(tweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
   const [retweetsCount, setRetweetsCount] = useState(tweet.retweets);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   // Use tweet.views or fallback
   const viewCount = tweet.views || (tweet.likes * 42) || 1000;
+
+  // Check delete permission
+  const canDelete = currentUser && (currentUser.handle === tweet.authorHandle || currentUser.isAdmin);
+
+  useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+          if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+              setShowMenu(false);
+          }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -42,6 +59,13 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
       setRetweetsCount(prev => prev + 1);
       setIsRetweeted(true);
     }
+  };
+
+  const handleDelete = () => {
+      if (confirm('คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?')) {
+          if (onDelete) onDelete(tweet.id);
+      }
+      setShowMenu(false);
   };
 
   const formatFullDate = () => {
@@ -146,9 +170,29 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, onBack, onReply
               <span className="text-twitter-gray">@{tweet.authorHandle}</span>
             </div>
           </div>
-          <button className="text-twitter-gray hover:text-twitter-accent p-2 rounded-full hover:bg-twitter-accent/10 transition-colors">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
+          <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-twitter-gray hover:text-twitter-accent p-2 rounded-full hover:bg-twitter-accent/10 transition-colors"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+              {showMenu && (
+                  <div className="absolute top-10 right-0 bg-black border border-twitter-border rounded-xl shadow-[0_0_10px_rgba(255,255,255,0.2)] z-50 w-48 overflow-hidden">
+                      {canDelete && (
+                          <div 
+                              onClick={handleDelete}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-red-500 text-[15px]"
+                          >
+                              <Trash2 className="w-4 h-4" /> ลบโพสต์
+                          </div>
+                      )}
+                      <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]">
+                          <BarChart2 className="w-4 h-4" /> ดูสถิติ
+                      </div>
+                  </div>
+              )}
+          </div>
         </div>
 
         {/* Main Content */}
