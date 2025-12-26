@@ -12,7 +12,7 @@ export interface PremiumPrivilege {
     icon: string; // Name of the lucide icon
     title: string;
     description: string;
-    plans: ('individual' | 'business')[]; // Supported plans
+    plans: ('individual' | 'business' | 'government')[]; // Supported plans
 }
 
 export interface PremiumPlan {
@@ -249,11 +249,14 @@ class UserService {
 
   private seedPremiumConfig() {
       this.premiumPrivileges = [
-          { id: 'p1', icon: 'Check', title: 'ป้ายมงกุฎสีทอง', description: 'แสดงหลังชื่อในทุกที่', plans: ['individual', 'business'] },
-          { id: 'p2', icon: 'Type', title: 'โพสต์ยาวขึ้น', description: 'พิมพ์ได้สูงสุด 25,000 ตัวอักษร', plans: ['individual', 'business'] },
-          { id: 'p3', icon: 'Edit3', title: 'แก้ไขโพสต์', description: 'แก้ไขได้ภายใน 1 ชั่วโมง', plans: ['individual', 'business'] },
-          { id: 'p4', icon: 'ArrowUpCircle', title: 'จัดลำดับความสำคัญ', description: 'คอมเมนต์แสดงเป็นอันดับแรกๆ', plans: ['individual', 'business'] },
-          { id: 'p5', icon: 'Building', title: 'Business Profile', description: 'Square avatar & Gold Badge', plans: ['business'] }
+          { id: 'p1', icon: 'Edit3', title: 'Edit post', description: 'Fix typos, add media, and more.', plans: ['individual', 'business', 'government'] },
+          { id: 'p2', icon: 'Type', title: 'Longer posts', description: 'Post up to 25,000 characters.', plans: ['individual', 'business', 'government'] },
+          { id: 'p3', icon: 'Undo2', title: 'Undo post', description: 'Retract a post before it\'s visible.', plans: ['individual', 'business'] },
+          { id: 'p4', icon: 'Smartphone', title: 'Background video', description: 'Play videos while using other apps.', plans: ['individual', 'business'] },
+          { id: 'p5', icon: 'BadgeCheck', title: 'Blue Checkmark', description: 'Get verified and prioritized.', plans: ['individual'] },
+          { id: 'p6', icon: 'Zap', title: 'Grok 2', description: 'Access our most powerful AI.', plans: ['individual', 'business', 'government'] },
+          { id: 'p7', icon: 'DollarSign', title: 'Creator Hub', description: 'Get paid to post.', plans: ['individual'] },
+          { id: 'p8', icon: 'Shield', title: 'No Ads', description: 'Experience X without distractions.', plans: ['individual', 'business'] }
       ];
   }
 
@@ -261,25 +264,47 @@ class UserService {
       this.premiumPlans = [
           { 
               id: 'plan_basic', 
+              name: 'Basic', 
+              price: 3, 
+              currency: '$', 
+              interval: 'month',
+              description: 'Essential premium features',
+              isRecommended: false,
+              type: 'individual',
+              features: ['Edit post', 'Longer posts', 'Undo post', 'Post longer videos', 'Top articles', 'Reader', 'Background video playback', 'Download videos']
+          },
+          { 
+              id: 'plan_premium', 
               name: 'Premium', 
               price: 8, 
               currency: '$', 
               interval: 'month',
-              description: 'Recurring billing',
+              description: 'Enhanced experience',
               isRecommended: true,
               type: 'individual',
-              features: ['ป้ายมงกุฎสีทอง', 'โพสต์ยาวขึ้น', 'แก้ไขโพสต์', 'จัดลำดับความสำคัญ']
+              features: ['Everything in Basic', 'Blue Checkmark', 'Grok 2', 'Half Ads in For You', 'Larger reply boost', 'Encrypted DMs', 'Creator Subscriptions', 'X Pro (Web only)', 'Media Studio']
+          },
+          { 
+              id: 'plan_plus', 
+              name: 'Premium+', 
+              price: 16, 
+              currency: '$', 
+              interval: 'month',
+              description: 'Maximum features',
+              isRecommended: false,
+              type: 'individual',
+              features: ['Everything in Premium', 'No Ads in For You', 'Largest reply boost', 'Write Articles', 'Radar (Trend insights)']
           },
           { 
               id: 'plan_org', 
               name: 'Verified Organizations', 
-              price: 1000, 
+              price: 200, 
               currency: '$', 
               interval: 'month',
               description: 'For businesses',
               isRecommended: false,
               type: 'organization',
-              features: ['Gold checkmark', 'Affiliation badges', 'Premium support']
+              features: ['Gold checkmark', 'Affiliation badges', 'Premium support', 'Impersonation defense', 'Hiring', 'Reach & Trends']
           }
       ];
       this.savePremiumConfig();
@@ -469,11 +494,8 @@ class UserService {
               type ENUM('individual', 'organization')
           )`, delay: 400 },
           
-          // Insert Default Plans
-          { msg: `INSERT INTO premium_plans VALUES 
-                  ('plan_basic', 'Premium', 8.00, '$', 'month', 'Recurring billing', '["ป้ายมงกุฎสีทอง", "โพสต์ยาวขึ้น"]', 'individual'),
-                  ('plan_org', 'Verified Organizations', 1000.00, '$', 'month', 'For businesses', '["Gold checkmark"]', 'organization')
-                  ON DUPLICATE KEY UPDATE name=VALUES(name)`, delay: 300 },
+          // Insert Default Plans (Use SQL format here for realism, but logic in seedPremiumPlans is what app uses)
+          { msg: `INSERT INTO premium_plans VALUES ... ON DUPLICATE KEY UPDATE`, delay: 300 },
           
           // Indexes & Optimization
           { msg: `CREATE INDEX idx_users_handle ON users(handle);`, delay: 300 },
@@ -772,7 +794,7 @@ class UserService {
   }
   
   // New: Grant Premium with Duration & Type & Privileges
-  public grantPremiumUser(handle: string, durationInDays?: number, type: 'individual' | 'business' = 'individual', customPrivileges?: string[]): boolean {
+  public grantPremiumUser(handle: string, durationInDays?: number, type: 'individual' | 'business' | 'government' = 'individual', customPrivileges?: string[]): boolean {
     const index = this.users.findIndex(u => u.handle === handle);
     if (index !== -1) {
         this.users[index].isPremium = true;
@@ -783,6 +805,11 @@ class UserService {
         // Business Logic: Auto square profile & auto verify
         if (type === 'business') {
             this.users[index].profileShape = 'square';
+            this.users[index].isVerified = true;
+        }
+        
+        // Government Logic: Auto verify
+        if (type === 'government') {
             this.users[index].isVerified = true;
         }
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Home, Search, Bell, Mail, User, MoreHorizontal, Feather, Sparkles, FileText, Bookmark, Users, BadgeCheck, Settings, LogOut, Shield } from 'lucide-react';
+import { Home, Search, Bell, Mail, User, MoreHorizontal, Feather, FileText, Bookmark, Users, BadgeCheck, Settings, LogOut, Shield } from 'lucide-react';
 import { NavigationItem, User as UserType, SiteConfig } from '../types';
 import { Button } from './Button';
 
@@ -10,6 +10,16 @@ interface SidebarProps {
   onLogout: () => void;
   siteConfig: SiteConfig | null;
 }
+
+// Authentic Grok Icon (Square with slash)
+const GrokIcon: React.FC<{ className?: string, active?: boolean }> = ({ className, active }) => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} ${active ? 'fill-current' : 'fill-transparent stroke-current stroke-2'}`}>
+        <g>
+            <path d="M2.5 2.5h19v19h-19z" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? '0' : '2'}></path>
+            <path d="M15.025 8.05L8.975 15.95" stroke={active ? 'black' : 'currentColor'} strokeWidth="2" strokeLinecap="square"></path>
+        </g>
+    </svg>
+);
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, currentUser, onLogout, siteConfig }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -30,11 +40,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
     { label: NavigationItem.EXPLORE, icon: Search, displayLabel: 'ค้นหา' },
     { label: NavigationItem.NOTIFICATIONS, icon: Bell, displayLabel: 'การแจ้งเตือน' },
     { label: NavigationItem.MESSAGES, icon: Mail, displayLabel: 'ข้อความ' },
-    { label: NavigationItem.GEMINI, icon: Sparkles, displayLabel: 'Gemini' }, // AI Feature
+    { label: NavigationItem.GROK, icon: GrokIcon, displayLabel: 'Grok', isCustomIcon: true }, // Rebranded Grok
     { label: NavigationItem.LISTS, icon: FileText, displayLabel: 'รายชื่อ' },
     { label: NavigationItem.BOOKMARKS, icon: Bookmark, displayLabel: 'บุ๊กมาร์ก' },
     { label: NavigationItem.COMMUNITIES, icon: Users, displayLabel: 'ชุมชน' },
-    { label: NavigationItem.PREMIUM, icon: BadgeCheck, displayLabel: 'ยืนยันตัวตน' },
+    { label: NavigationItem.PREMIUM, icon: BadgeCheck, displayLabel: 'พรีเมียม' },
     { label: NavigationItem.PROFILE, icon: User, displayLabel: 'ข้อมูลส่วนตัว' },
     { label: NavigationItem.SETTINGS, icon: Settings, displayLabel: 'การตั้งค่า' },
   ];
@@ -77,10 +87,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
               activeItem === item.label ? 'font-bold' : 'font-normal'
             } hover:bg-twitter-card`}
           >
-            <item.icon 
-              className={`w-7 h-7 ${activeItem === item.label ? 'text-white' : 'text-white'}`} 
-              strokeWidth={activeItem === item.label ? 2.5 : 2}
-            />
+            {item.isCustomIcon ? (
+                // @ts-ignore
+                <item.icon className="w-7 h-7 text-white" active={activeItem === item.label} />
+            ) : (
+                <item.icon 
+                  className={`w-7 h-7 ${activeItem === item.label ? 'text-white' : 'text-white'}`} 
+                  strokeWidth={activeItem === item.label ? 2.5 : 2}
+                />
+            )}
             <span className={`hidden xl:block ml-4 text-xl ${activeItem === item.label ? 'text-white' : 'text-white'}`}>
               {item.displayLabel || item.label}
             </span>

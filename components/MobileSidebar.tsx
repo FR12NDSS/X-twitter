@@ -11,6 +11,15 @@ interface MobileSidebarProps {
   siteConfig: SiteConfig | null;
 }
 
+const GrokIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
+        <g>
+            <path d="M2.5 2.5h19v19h-19z" fill="none" stroke="currentColor" strokeWidth="2"></path>
+            <path d="M15.025 8.05L8.975 15.95" stroke="currentColor" strokeWidth="2" strokeLinecap="square"></path>
+        </g>
+    </svg>
+);
+
 export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose, user, onNavigate, onLogout, siteConfig }) => {
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
@@ -81,6 +90,11 @@ export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose, u
                        <span className="text-xl font-bold text-white leading-none">X</span>
                    </div>
                    <span className="text-xl font-bold text-white">พรีเมียม</span>
+               </button>
+
+               <button onClick={() => handleNav(NavigationItem.GROK)} className="flex items-center gap-4 px-6 py-3 w-full hover:bg-white/5 transition-colors text-left">
+                   <GrokIcon className="w-6 h-6 text-white" />
+                   <span className="text-xl font-bold text-white">Grok</span>
                </button>
 
                <button onClick={() => handleNav(NavigationItem.COMMUNITIES)} className="flex items-center gap-4 px-6 py-3 w-full hover:bg-white/5 transition-colors text-left">

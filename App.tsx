@@ -504,7 +504,7 @@ const App: React.FC = () => {
         return <Communities />;
       case NavigationItem.PREMIUM:
         return <Premium />;
-      case NavigationItem.GEMINI:
+      case NavigationItem.GROK: // Rebranded
         return <GeminiPage />;
       case NavigationItem.SETTINGS:
         return <SettingsPage currentUser={currentUser} onUpdateUser={handleUpdateProfile} />;

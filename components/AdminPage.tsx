@@ -75,7 +75,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
   // Premium Management
   const [managePremiumUser, setManagePremiumUser] = useState<User | null>(null);
   const [premiumDuration, setPremiumDuration] = useState<number | 'lifetime'>(30); // Default 30 days
-  const [premiumType, setPremiumType] = useState<'individual' | 'business'>('individual');
+  const [premiumType, setPremiumType] = useState<'individual' | 'business' | 'government'>('individual');
   const [userPrivileges, setUserPrivileges] = useState<string[]>([]); // New state for selected privileges for a user
   const [premiumSearch, setPremiumSearch] = useState('');
 
@@ -109,8 +109,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
               setUserPrivileges(managePremiumUser.customPrivileges);
           } else {
               // Otherwise, default to all privileges available for the selected plan type
+              // Cast premiumType to match Privilege plans type which may be more specific in some contexts but aligned here
               const defaultPrivileges = premiumPrivileges
-                  .filter(p => p.plans?.includes(premiumType))
+                  .filter(p => p.plans?.includes(premiumType as any))
                   .map(p => p.id);
               setUserPrivileges(defaultPrivileges);
           }
@@ -569,174 +570,212 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
   );
 
   const renderContent = () => (
-      <div className="space-y-6 animate-in fade-in">
-          <div className="bg-twitter-card border border-twitter-border rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-twitter-border/50 flex justify-between items-center">
-                  <h3 className="font-bold text-white">จัดการเนื้อหาล่าสุด</h3>
-                  <div className="text-xs text-twitter-gray">แสดง {tweets.length} โพสต์ล่าสุด</div>
-              </div>
-              <div className="divide-y divide-twitter-border/20">
-                  {tweets.map(tweet => (
-                      <div key={tweet.id} className="p-4 hover:bg-white/5 transition-colors flex gap-4">
-                          <img src={tweet.avatarUrl} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-start mb-1">
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-bold text-white text-sm">{tweet.authorName}</span>
-                                      <span className="text-twitter-gray text-xs">@{tweet.authorHandle}</span>
-                                  </div>
-                                  <span className="text-twitter-gray text-xs">{tweet.timestamp}</span>
-                              </div>
-                              <p className="text-white text-sm mb-2 line-clamp-2">{tweet.content}</p>
-                              <div className="flex items-center gap-4 text-xs text-twitter-gray">
-                                  <span>Likes: {tweet.likes}</span>
-                                  <span>Retweets: {tweet.retweets}</span>
-                                  <span>Views: {tweet.views}</span>
-                                  {tweet.isPromoted && <span className="text-yellow-500 font-bold flex items-center gap-1"><Megaphone className="w-3 h-3" /> Promoted</span>}
-                              </div>
-                          </div>
-                          <div className="flex flex-col gap-2 justify-center">
-                              <button 
-                                onClick={() => onPromoteTweet(tweet.id)}
-                                className={`p-2 rounded-full transition-colors ${tweet.isPromoted ? 'bg-yellow-500 text-black' : 'hover:bg-yellow-500/20 text-yellow-500'}`}
-                                title="Promote Tweet"
-                              >
-                                  <Megaphone className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteContent(tweet.id)}
-                                className="p-2 hover:bg-red-500/20 text-red-500 rounded-full transition-colors"
-                                title="Delete Tweet"
-                              >
-                                  <Trash2 className="w-4 h-4" />
-                              </button>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-          </div>
-      </div>
+    <div className="space-y-6 animate-in fade-in">
+        <h3 className="text-xl font-bold text-white mb-4">จัดการเนื้อหา</h3>
+        <div className="space-y-4">
+            {tweets.map(tweet => (
+                <div key={tweet.id} className="bg-twitter-card border border-twitter-border p-4 rounded-xl flex gap-4">
+                    <img src={tweet.avatarUrl} className="w-10 h-10 rounded-full object-cover" />
+                    <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                             <div>
+                                 <span className="font-bold text-white">{tweet.authorName}</span>
+                                 <span className="text-twitter-gray text-sm ml-2">@{tweet.authorHandle}</span>
+                             </div>
+                             <div className="text-twitter-gray text-xs">{tweet.timestamp}</div>
+                        </div>
+                        <p className="text-white mt-1 mb-2">{tweet.content}</p>
+                        {tweet.images && tweet.images.length > 0 && (
+                            <div className="flex gap-2 mb-2">
+                                {tweet.images.map((img, i) => (
+                                    <img key={i} src={img} className="h-20 w-auto rounded-lg object-cover" />
+                                ))}
+                            </div>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                            <Button size="sm" variant="outline" className="text-red-500 border-red-500/50 hover:bg-red-500/10" onClick={() => handleDeleteContent(tweet.id)}>
+                                <Trash2 className="w-4 h-4 mr-1" /> ลบ
+                            </Button>
+                            <Button size="sm" variant={tweet.isPromoted ? 'primary' : 'secondary'} onClick={() => onPromoteTweet(tweet.id)}>
+                                <Megaphone className="w-4 h-4 mr-1" /> {tweet.isPromoted ? 'เลิกโปรโมท' : 'โปรโมท'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            {tweets.length === 0 && (
+                <div className="text-center text-twitter-gray p-8">ไม่มีโพสต์ในระบบ</div>
+            )}
+        </div>
+    </div>
   );
 
   const renderVerification = () => (
-      <div className="space-y-6 animate-in fade-in">
-          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl">
-              <h3 className="text-xl font-bold text-white mb-2">Global Badges</h3>
-              <p className="text-twitter-gray text-sm mb-6">
-                  อัปโหลดตราสัญลักษณ์พิเศษ (สูงสุด 5 รายการ) เพื่อมอบให้กับผู้ใช้ที่ได้รับการยืนยัน
-              </p>
+    <div className="space-y-6 animate-in fade-in">
+         <h3 className="text-xl font-bold text-white mb-4">ตราสัญลักษณ์ยืนยันตัวตน (Global Badges)</h3>
+         <p className="text-twitter-gray text-sm mb-6">อัปโหลดตราสัญลักษณ์พิเศษที่สามารถมอบให้กับผู้ใช้งานได้ (สูงสุด 5 แบบ)</p>
+         
+         <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
+             {globalBadges.map((badge, index) => (
+                 <div key={index} className="flex flex-col items-center gap-2">
+                     <div className="w-16 h-16 border-2 border-dashed border-twitter-border rounded-xl flex items-center justify-center relative bg-twitter-card group overflow-hidden">
+                         {badge ? (
+                             <>
+                                <img src={badge} className="w-10 h-10 object-contain" />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <button onClick={() => handleRemoveBadgeFromPool(index)} className="text-red-500"><X className="w-5 h-5" /></button>
+                                </div>
+                             </>
+                         ) : (
+                             <button onClick={() => badgeInputRefs.current[index]?.click()} className="text-twitter-gray hover:text-white">
+                                 <Plus className="w-6 h-6" />
+                             </button>
+                         )}
+                         <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            ref={el => badgeInputRefs.current[index] = el}
+                            onChange={(e) => handleBadgeUpload(index, e)}
+                         />
+                     </div>
+                     <span className="text-xs text-twitter-gray">Badge {index + 1}</span>
+                 </div>
+             ))}
+         </div>
 
-              <div className="flex flex-wrap gap-4">
-                  {globalBadges.map((badge, index) => (
-                      <div key={index} className="relative group">
-                          <div 
-                              onClick={() => badgeInputRefs.current[index]?.click()}
-                              className={`w-16 h-16 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${badge ? 'border-twitter-accent bg-twitter-accent/10' : 'border-twitter-gray hover:border-white hover:bg-white/5'}`}
-                          >
-                              {badge ? (
-                                  <img src={badge} className="w-8 h-8 object-contain" />
-                              ) : (
-                                  <Upload className="w-6 h-6 text-twitter-gray" />
-                              )}
-                          </div>
-                          
-                          {badge && (
-                              <button 
-                                  onClick={() => handleRemoveBadgeFromPool(index)}
-                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                  <X className="w-3 h-3" />
-                              </button>
-                          )}
-                          
-                          <input 
-                              type="file" 
-                              ref={(el) => { badgeInputRefs.current[index] = el; }}
-                              className="hidden" 
-                              accept="image/*"
-                              onChange={(e) => handleBadgeUpload(index, e)}
-                          />
-                          <div className="text-center text-xs text-twitter-gray mt-2">Slot {index + 1}</div>
-                      </div>
-                  ))}
-              </div>
-          </div>
-      </div>
+         <h3 className="text-xl font-bold text-white mb-4">จัดการผู้ใช้งาน</h3>
+         <div className="relative w-full max-w-md mb-6">
+             <Search className="absolute left-3 top-3 w-4 h-4 text-twitter-gray" />
+             <input 
+                type="text" 
+                placeholder="ค้นหาผู้ใช้เพื่อมอบตรา..." 
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="w-full bg-black border border-twitter-border rounded-full pl-10 pr-4 py-2 text-white focus:border-twitter-accent outline-none"
+             />
+         </div>
+
+         <div className="space-y-2">
+             {filteredUsers.slice(0, 10).map(user => (
+                 <div key={user.handle} className="flex items-center justify-between p-3 border border-twitter-border rounded-lg bg-twitter-card/30">
+                     <div className="flex items-center gap-3">
+                         <img src={user.avatarUrl} className="w-10 h-10 rounded-full" />
+                         <div>
+                             <div className="font-bold text-white flex items-center gap-1">
+                                 {user.name}
+                                 <VerifiedBadge user={user} className="w-3 h-3" />
+                             </div>
+                             <div className="text-twitter-gray text-xs">@{user.handle}</div>
+                         </div>
+                     </div>
+                     <Button size="sm" variant="secondary" onClick={() => setSelectedUserForBadges(user)}>
+                         จัดการตรา
+                     </Button>
+                 </div>
+             ))}
+         </div>
+    </div>
   );
 
   const renderCommunities = () => (
-      <div className="space-y-6 animate-in fade-in">
-          <div className="flex justify-between items-center bg-twitter-card border border-twitter-border p-4 rounded-xl">
-               <div>
-                   <h3 className="font-bold text-white">ชุมชนทั้งหมด</h3>
-                   <p className="text-xs text-twitter-gray">{allCommunities.length} Active Communities</p>
-               </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allCommunities.map(comm => (
-                  <div key={comm.id} className="bg-twitter-card border border-twitter-border p-4 rounded-xl flex gap-4 group hover:border-twitter-accent transition-colors">
-                      <img src={comm.avatarUrl} className="w-16 h-16 rounded-xl object-cover" />
-                      <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                              <h4 className="font-bold text-white truncate">{comm.name}</h4>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => handleOpenEditCommunity(comm)} className="p-1.5 hover:bg-white/10 rounded text-white"><Edit3 className="w-4 h-4" /></button>
-                                  <button onClick={() => handleToggleBanCommunity(comm)} className={`p-1.5 hover:bg-white/10 rounded ${comm.isBanned ? 'text-red-500' : 'text-orange-500'}`}><Ban className="w-4 h-4" /></button>
-                                  <button onClick={() => handleDeleteCommunity(comm.id)} className="p-1.5 hover:bg-white/10 rounded text-red-500"><Trash2 className="w-4 h-4" /></button>
-                              </div>
-                          </div>
-                          <p className="text-twitter-gray text-xs mb-2 truncate">{comm.description}</p>
-                          <div className="flex items-center gap-2">
-                              <span className="text-xs bg-white/10 px-2 py-0.5 rounded text-white">{comm.memberCount} Members</span>
-                              {comm.isBanned && <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded font-bold">BANNED</span>}
-                          </div>
-                      </div>
-                  </div>
-              ))}
-          </div>
-      </div>
+    <div className="space-y-6 animate-in fade-in">
+        <h3 className="text-xl font-bold text-white mb-4">จัดการชุมชน</h3>
+        <div className="space-y-4">
+            {allCommunities.map(comm => (
+                <div key={comm.id} className="flex items-center justify-between p-4 bg-twitter-card border border-twitter-border rounded-xl">
+                    <div className="flex items-center gap-4">
+                        <img src={comm.avatarUrl} className="w-12 h-12 rounded-lg object-cover" />
+                        <div>
+                            <div className="font-bold text-white flex items-center gap-2">
+                                {comm.name}
+                                {comm.isBanned && <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded">ระงับการใช้งาน</span>}
+                            </div>
+                            <div className="text-twitter-gray text-sm">{comm.memberCount} สมาชิก</div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => handleOpenEditCommunity(comm)} className="p-2 hover:bg-white/10 rounded-full text-white" title="แก้ไข"><Edit3 className="w-4 h-4" /></button>
+                        <button onClick={() => handleToggleBanCommunity(comm)} className={`p-2 hover:bg-white/10 rounded-full ${comm.isBanned ? 'text-green-500' : 'text-orange-500'}`} title={comm.isBanned ? "ยกเลิกระงับ" : "ระงับ"}>
+                            <Ban className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteCommunity(comm.id)} className="p-2 hover:bg-white/10 rounded-full text-red-500" title="ลบ"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                </div>
+            ))}
+             {allCommunities.length === 0 && (
+                <div className="text-center text-twitter-gray p-8">ไม่มีชุมชนในระบบ</div>
+            )}
+        </div>
+    </div>
   );
 
   const renderPremium = () => (
       <div className="space-y-8 animate-in fade-in">
-          {/* Badge Configuration */}
-          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl">
-              <h3 className="text-xl font-bold text-white mb-6">Badge Configuration</h3>
-              <div className="flex gap-8">
+          {/* Badge Config Section */}
+           <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl">
+              <h3 className="text-xl font-bold text-white mb-4">Custom Badges</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                      <label className="block text-sm text-twitter-gray mb-2">Premium Badge (Individual)</label>
-                      <div className="relative group w-20 h-20">
-                          <div 
-                              onClick={() => premiumBadgeInputRef.current?.click()}
-                              className={`w-20 h-20 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${premiumBadgeUrl ? 'border-twitter-accent bg-twitter-accent/10' : 'border-twitter-gray hover:border-white'}`}
-                          >
-                              {premiumBadgeUrl ? <img src={premiumBadgeUrl} className="w-10 h-10 object-contain" /> : <Upload className="w-8 h-8 text-twitter-gray" />}
+                      <h4 className="font-bold text-white mb-2 text-sm">Individual Premium Badge</h4>
+                      <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 border border-twitter-border rounded-xl flex items-center justify-center bg-black overflow-hidden relative group">
+                              {premiumBadgeUrl ? (
+                                  <>
+                                      <img src={premiumBadgeUrl} className="w-10 h-10 object-contain" />
+                                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                          <button onClick={handleRemovePremiumBadge} className="text-red-500"><X className="w-5 h-5" /></button>
+                                      </div>
+                                  </>
+                              ) : (
+                                  <VerifiedBadge forceDefault className="w-10 h-10" />
+                              )}
                           </div>
-                          {premiumBadgeUrl && (
-                              <button onClick={handleRemovePremiumBadge} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
-                          )}
-                          <input type="file" ref={premiumBadgeInputRef} className="hidden" accept="image/*" onChange={handlePremiumBadgeUpload} />
+                          <div>
+                              <input 
+                                  type="file" 
+                                  ref={premiumBadgeInputRef}
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={handlePremiumBadgeUpload}
+                              />
+                              <Button size="sm" variant="secondary" onClick={() => premiumBadgeInputRef.current?.click()}>Upload Custom Icon</Button>
+                              <p className="text-xs text-twitter-gray mt-1">Replaces the default blue checkmark</p>
+                          </div>
                       </div>
                   </div>
+
                   <div>
-                      <label className="block text-sm text-twitter-gray mb-2">Business Badge (Organization)</label>
-                      <div className="relative group w-20 h-20">
-                          <div 
-                              onClick={() => businessBadgeInputRef.current?.click()}
-                              className={`w-20 h-20 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${businessBadgeUrl ? 'border-twitter-accent bg-twitter-accent/10' : 'border-twitter-gray hover:border-white'}`}
-                          >
-                              {businessBadgeUrl ? <img src={businessBadgeUrl} className="w-10 h-10 object-contain" /> : <Upload className="w-8 h-8 text-twitter-gray" />}
+                      <h4 className="font-bold text-white mb-2 text-sm">Business Verified Badge</h4>
+                      <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 border border-twitter-border rounded-xl flex items-center justify-center bg-black overflow-hidden relative group">
+                              {businessBadgeUrl ? (
+                                  <>
+                                      <img src={businessBadgeUrl} className="w-10 h-10 object-contain" />
+                                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                          <button onClick={handleRemoveBusinessBadge} className="text-red-500"><X className="w-5 h-5" /></button>
+                                      </div>
+                                  </>
+                              ) : (
+                                  <div className="text-yellow-500"><BadgeCheck className="w-10 h-10 fill-current" /></div>
+                              )}
                           </div>
-                          {businessBadgeUrl && (
-                              <button onClick={handleRemoveBusinessBadge} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
-                          )}
-                          <input type="file" ref={businessBadgeInputRef} className="hidden" accept="image/*" onChange={handleBusinessBadgeUpload} />
+                          <div>
+                              <input 
+                                  type="file" 
+                                  ref={businessBadgeInputRef}
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={handleBusinessBadgeUpload}
+                              />
+                              <Button size="sm" variant="secondary" onClick={() => businessBadgeInputRef.current?.click()}>Upload Custom Icon</Button>
+                              <p className="text-xs text-twitter-gray mt-1">Replaces the gold checkmark</p>
+                          </div>
                       </div>
                   </div>
               </div>
           </div>
-
+          
           {/* Plan Configuration */}
           <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl">
               <h3 className="text-xl font-bold text-white mb-4">Subscription Plans</h3>
@@ -793,71 +832,55 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
   );
 
   const renderEmailSettings = () => (
-      <div className="space-y-6 animate-in fade-in max-w-4xl">
-          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Mail className="w-6 h-6 text-twitter-accent" />
-                  ตั้งค่าเทมเพลตอีเมล (Email Templates)
-              </h3>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Verification Email */}
-                  <div className="space-y-4">
-                      <h4 className="text-white font-bold border-b border-twitter-border pb-2">อีเมลยืนยันตัวตน (Verification)</h4>
-                      
+      <div className="space-y-6 animate-in fade-in">
+          <h3 className="text-xl font-bold text-white mb-4">ตั้งค่าอีเมล</h3>
+          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl space-y-6">
+              <div>
+                  <h4 className="font-bold text-white mb-2">Verification Email</h4>
+                  <div className="space-y-3">
                       <div>
-                          <label className="block text-xs text-twitter-gray mb-1">หัวข้ออีเมล (Subject)</label>
+                          <label className="text-xs text-twitter-gray block mb-1">Subject</label>
                           <input 
-                              type="text" 
                               value={emailConfig.verification.subject}
-                              onChange={(e) => setEmailConfig({...emailConfig, verification: {...emailConfig.verification, subject: e.target.value}})}
-                              className="w-full bg-black border border-twitter-border rounded-lg px-3 py-2 text-white outline-none focus:border-twitter-accent"
+                              onChange={e => setEmailConfig({...emailConfig, verification: {...emailConfig.verification, subject: e.target.value}})}
+                              className="w-full bg-black border border-twitter-border rounded p-2 text-white"
                           />
                       </div>
-
                       <div>
-                          <label className="block text-xs text-twitter-gray mb-1">เนื้อหาอีเมล (Body)</label>
+                          <label className="text-xs text-twitter-gray block mb-1">Body (Supports {'{name}'}, {'{code}'}, {'{siteName}'})</label>
                           <textarea 
                               value={emailConfig.verification.body}
-                              onChange={(e) => setEmailConfig({...emailConfig, verification: {...emailConfig.verification, body: e.target.value}})}
-                              className="w-full bg-black border border-twitter-border rounded-lg px-3 py-2 text-white outline-none focus:border-twitter-accent h-40 resize-none font-mono text-sm"
+                              onChange={e => setEmailConfig({...emailConfig, verification: {...emailConfig.verification, body: e.target.value}})}
+                              className="w-full bg-black border border-twitter-border rounded p-2 text-white h-32"
                           />
-                          <p className="text-xs text-twitter-gray mt-2">
-                              ตัวแปรที่ใช้ได้: <span className="text-twitter-accent">{`{name}`}</span>, <span className="text-twitter-accent">{`{siteName}`}</span>, <span className="text-twitter-accent">{`{code}`}</span>, <span className="text-twitter-accent">{`{handle}`}</span>
-                          </p>
                       </div>
                   </div>
-
-                  {/* Welcome Email */}
-                  <div className="space-y-4">
-                      <h4 className="text-white font-bold border-b border-twitter-border pb-2">อีเมลต้อนรับ (Welcome)</h4>
-                      
+              </div>
+              
+              <div className="border-t border-twitter-border pt-6">
+                  <h4 className="font-bold text-white mb-2">Welcome Email</h4>
+                  <div className="space-y-3">
                       <div>
-                          <label className="block text-xs text-twitter-gray mb-1">หัวข้ออีเมล (Subject)</label>
+                          <label className="text-xs text-twitter-gray block mb-1">Subject</label>
                           <input 
-                              type="text" 
                               value={emailConfig.welcome.subject}
-                              onChange={(e) => setEmailConfig({...emailConfig, welcome: {...emailConfig.welcome, subject: e.target.value}})}
-                              className="w-full bg-black border border-twitter-border rounded-lg px-3 py-2 text-white outline-none focus:border-twitter-accent"
+                              onChange={e => setEmailConfig({...emailConfig, welcome: {...emailConfig.welcome, subject: e.target.value}})}
+                              className="w-full bg-black border border-twitter-border rounded p-2 text-white"
                           />
                       </div>
-
                       <div>
-                          <label className="block text-xs text-twitter-gray mb-1">เนื้อหาอีเมล (Body)</label>
+                          <label className="text-xs text-twitter-gray block mb-1">Body</label>
                           <textarea 
                               value={emailConfig.welcome.body}
-                              onChange={(e) => setEmailConfig({...emailConfig, welcome: {...emailConfig.welcome, body: e.target.value}})}
-                              className="w-full bg-black border border-twitter-border rounded-lg px-3 py-2 text-white outline-none focus:border-twitter-accent h-40 resize-none font-mono text-sm"
+                              onChange={e => setEmailConfig({...emailConfig, welcome: {...emailConfig.welcome, body: e.target.value}})}
+                              className="w-full bg-black border border-twitter-border rounded p-2 text-white h-32"
                           />
-                          <p className="text-xs text-twitter-gray mt-2">
-                              ตัวแปรที่ใช้ได้: <span className="text-twitter-accent">{`{name}`}</span>, <span className="text-twitter-accent">{`{siteName}`}</span>, <span className="text-twitter-accent">{`{handle}`}</span>
-                          </p>
                       </div>
                   </div>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-twitter-border flex justify-end">
-                  <Button onClick={handleSaveEmailConfig}>บันทึกการตั้งค่าอีเมล</Button>
+              <div className="flex justify-end pt-4">
+                  <Button onClick={handleSaveEmailConfig}>บันทึกการตั้งค่า</Button>
               </div>
           </div>
       </div>
@@ -865,44 +888,46 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
 
   const renderSettings = () => (
       <div className="space-y-6 animate-in fade-in">
-          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl max-w-2xl">
-              <h3 className="text-xl font-bold text-white mb-6">General Settings</h3>
+          <h3 className="text-xl font-bold text-white mb-4">ตั้งค่าเว็บไซต์</h3>
+          <div className="bg-twitter-card border border-twitter-border p-6 rounded-xl space-y-6">
+              <div>
+                  <label className="block text-sm font-bold text-white mb-2">ชื่อเว็บไซต์</label>
+                  <input 
+                      type="text" 
+                      value={configName}
+                      onChange={(e) => setConfigName(e.target.value)}
+                      className="w-full bg-black border border-twitter-border rounded-lg p-3 text-white focus:border-twitter-accent outline-none"
+                  />
+              </div>
               
-              <div className="space-y-6">
-                  <div>
-                      <label className="block text-sm text-twitter-gray mb-2">Site Name</label>
-                      <input 
-                          type="text" 
-                          value={configName}
-                          onChange={(e) => setConfigName(e.target.value)}
-                          className="w-full bg-black border border-twitter-border rounded-lg px-4 py-2 text-white outline-none focus:border-twitter-accent"
-                      />
-                  </div>
-
-                  <div>
-                      <label className="block text-sm text-twitter-gray mb-2">Site Logo</label>
-                      <div className="flex items-center gap-4">
-                          <div 
-                              onClick={() => logoInputRef.current?.click()}
-                              className="w-20 h-20 bg-black border border-twitter-border rounded-xl flex items-center justify-center cursor-pointer hover:border-twitter-accent transition-colors"
-                          >
-                              {configLogo ? (
-                                  <img src={configLogo} className="w-12 h-12 object-contain" />
-                              ) : (
-                                  <Upload className="w-6 h-6 text-twitter-gray" />
-                              )}
-                          </div>
-                          <div className="text-sm text-twitter-gray">
-                              <p>Recommended: 512x512px PNG</p>
-                              <p>Click to upload new logo</p>
-                          </div>
-                          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
+              <div>
+                  <label className="block text-sm font-bold text-white mb-2">โลโก้เว็บไซต์</label>
+                  <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-black border border-twitter-border rounded-lg flex items-center justify-center overflow-hidden">
+                          {configLogo ? (
+                              <img src={configLogo} className="w-full h-full object-contain" />
+                          ) : (
+                              <Globe className="w-8 h-8 text-twitter-gray" />
+                          )}
+                      </div>
+                      <div>
+                          <input 
+                              type="file" 
+                              ref={logoInputRef}
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                          />
+                          <Button variant="secondary" onClick={() => logoInputRef.current?.click()} className="mb-2">อัปโหลดโลโก้</Button>
+                          {configLogo && (
+                              <button onClick={() => setConfigLogo(null)} className="block text-red-500 text-sm hover:underline">ลบโลโก้</button>
+                          )}
                       </div>
                   </div>
+              </div>
 
-                  <div className="pt-4 border-t border-twitter-border">
-                      <Button onClick={handleSaveSiteConfig}>Save Changes</Button>
-                  </div>
+              <div className="border-t border-twitter-border pt-6 flex justify-end">
+                  <Button size="lg" onClick={handleSaveSiteConfig}>บันทึกการเปลี่ยนแปลง</Button>
               </div>
           </div>
       </div>
@@ -910,7 +935,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Sidebar */}
+      {/* Sidebar (Full implementation required for context) */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-twitter-border transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:inset-auto ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 border-b border-twitter-border flex justify-between items-center">
            <h2 className="text-xl font-bold flex items-center gap-2">
@@ -920,62 +945,23 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-white"><X className="w-6 h-6" /></button>
         </div>
         <div className="flex-1 py-4 overflow-y-auto">
-            <button 
-                onClick={() => handleTabChange('overview')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'overview' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <LayoutDashboard className="w-5 h-5" />
-                <span>ภาพรวม</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('users')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'users' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <Users className="w-5 h-5" />
-                <span>ผู้ใช้งาน</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('premium')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'premium' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <Crown className="w-5 h-5" />
-                <span>Premium & Plans</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('content')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'content' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <FileText className="w-5 h-5" />
-                <span>เนื้อหา (Tweets)</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('verification')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'verification' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <BadgeCheck className="w-5 h-5" />
-                <span>ตราสัญลักษณ์</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('communities')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'communities' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <Users className="w-5 h-5" />
-                <span>ชุมชน</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('email')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'email' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <Mail className="w-5 h-5" />
-                <span>ตั้งค่าอีเมล</span>
-            </button>
-            <button 
-                onClick={() => handleTabChange('settings')}
-                className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === 'settings' ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
-            >
-                <Settings className="w-5 h-5" />
-                <span>ตั้งค่าเว็บไซต์</span>
-            </button>
+            {['overview', 'users', 'premium', 'content', 'verification', 'communities', 'email', 'settings'].map((tab) => (
+                <button 
+                    key={tab}
+                    onClick={() => handleTabChange(tab as AdminTab)}
+                    className={`w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${activeTab === tab ? 'border-r-2 border-twitter-accent bg-white/5 text-white' : 'text-twitter-gray hover:bg-white/5 hover:text-white'}`}
+                >
+                    {tab === 'overview' && <LayoutDashboard className="w-5 h-5" />}
+                    {tab === 'users' && <Users className="w-5 h-5" />}
+                    {tab === 'premium' && <Crown className="w-5 h-5" />}
+                    {tab === 'content' && <FileText className="w-5 h-5" />}
+                    {tab === 'verification' && <BadgeCheck className="w-5 h-5" />}
+                    {tab === 'communities' && <Users className="w-5 h-5" />}
+                    {tab === 'email' && <Mail className="w-5 h-5" />}
+                    {tab === 'settings' && <Settings className="w-5 h-5" />}
+                    <span className="capitalize">{tab}</span>
+                </button>
+            ))}
         </div>
       </div>
 
@@ -984,14 +970,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
             <div className="flex items-center gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-white"><Menu className="w-6 h-6" /></button>
                 <h1 className="text-xl md:text-2xl font-bold capitalize truncate">
-                    {activeTab === 'overview' && 'ภาพรวมระบบ'}
-                    {activeTab === 'users' && 'จัดการผู้ใช้งาน'}
-                    {activeTab === 'premium' && 'Premium & Plans'}
-                    {activeTab === 'content' && 'จัดการเนื้อหา'}
-                    {activeTab === 'verification' && 'คลังตราสัญลักษณ์'}
-                    {activeTab === 'communities' && 'จัดการชุมชน'}
-                    {activeTab === 'email' && 'ตั้งค่าเทมเพลตอีเมล'}
-                    {activeTab === 'settings' && 'ตั้งค่าเว็บไซต์'}
+                    {activeTab} Management
                 </h1>
             </div>
             {activeTab !== 'settings' && activeTab !== 'email' && <Button size="sm" variant="secondary" onClick={onRefreshFeed}>รีเฟรชข้อมูล</Button>}
@@ -1009,209 +988,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
         </div>
       </div>
 
-      {/* Edit Community Modal */}
-      {editingCommunity && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-bold text-white">แก้ไขชุมชน</h3>
-                      <button onClick={() => setEditingCommunity(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
-                  </div>
-                  
-                  {/* Tabs */}
-                  <div className="flex border-b border-twitter-border mb-4">
-                      <button 
-                        onClick={() => setCommunityTab('general')}
-                        className={`flex-1 py-2 text-sm font-bold ${communityTab === 'general' ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray hover:text-white'}`}
-                      >
-                          ทั่วไป
-                      </button>
-                      <button 
-                        onClick={() => setCommunityTab('members')}
-                        className={`flex-1 py-2 text-sm font-bold ${communityTab === 'members' ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray hover:text-white'}`}
-                      >
-                          สมาชิก ({editingCommunity.memberCount})
-                      </button>
-                  </div>
-                  
-                  {communityTab === 'general' && (
-                      <div className="space-y-4">
-                          <div className="flex justify-center mb-4">
-                              <div className="relative group cursor-pointer" onClick={() => communityAvatarInputRef.current?.click()}>
-                                  <img src={editingCommunity.avatarUrl} className="w-24 h-24 rounded-2xl object-cover border-2 border-twitter-border" />
-                                  <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center rounded-2xl">
-                                      <Camera className="w-8 h-8 text-white" />
-                                  </div>
-                                  <input 
-                                      type="file" 
-                                      ref={communityAvatarInputRef}
-                                      accept="image/*"
-                                      onChange={handleCommunityAvatarUpload}
-                                      className="hidden"
-                                  />
-                              </div>
-                          </div>
-
-                          <div>
-                              <label className="block text-xs text-twitter-gray mb-1">ชื่อชุมชน</label>
-                              <input 
-                                  value={editingCommunity.name}
-                                  onChange={(e) => setEditingCommunity({...editingCommunity, name: e.target.value})}
-                                  className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent"
-                              />
-                          </div>
-                          <div>
-                              <label className="block text-xs text-twitter-gray mb-1">คำอธิบาย</label>
-                              <textarea 
-                                  value={editingCommunity.description}
-                                  onChange={(e) => setEditingCommunity({...editingCommunity, description: e.target.value})}
-                                  className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent resize-none h-20"
-                              />
-                          </div>
-                          <div className="flex justify-end pt-4">
-                              <Button onClick={handleSaveCommunity}>บันทึก</Button>
-                          </div>
-                      </div>
-                  )}
-
-                  {communityTab === 'members' && (
-                      <div className="space-y-4">
-                          <div className="bg-twitter-card rounded-lg p-3 max-h-60 overflow-y-auto">
-                              <h4 className="text-white font-bold text-sm mb-2 sticky top-0 bg-twitter-card pb-2 border-b border-twitter-border/50">สมาชิกปัจจุบัน</h4>
-                              {communityMembers.length > 0 ? (
-                                  communityMembers.map(member => (
-                                      <div key={member.handle} className="flex items-center justify-between py-2 border-b border-twitter-border/20 last:border-0">
-                                          <div className="flex items-center gap-2">
-                                              <img src={member.avatarUrl} className="w-8 h-8 rounded-full" />
-                                              <div>
-                                                  <div className="text-sm text-white font-bold">{member.name}</div>
-                                                  <div className="text-xs text-twitter-gray">@{member.handle}</div>
-                                              </div>
-                                          </div>
-                                          <button 
-                                            onClick={() => handleBanUserFromCommunity(member.handle)}
-                                            className="text-xs text-red-500 hover:bg-red-500/10 px-2 py-1 rounded font-bold"
-                                          >
-                                              แบน
-                                          </button>
-                                      </div>
-                                  ))
-                              ) : (
-                                  <div className="text-center text-twitter-gray py-4 text-sm">ไม่มีสมาชิกในขณะนี้</div>
-                              )}
-                          </div>
-
-                          <div className="bg-twitter-card rounded-lg p-3 max-h-40 overflow-y-auto">
-                              <h4 className="text-white font-bold text-sm mb-2 sticky top-0 bg-twitter-card pb-2 border-b border-twitter-border/50">ผู้ใช้ที่ถูกแบน</h4>
-                              {editingCommunity.bannedUsers && editingCommunity.bannedUsers.length > 0 ? (
-                                  editingCommunity.bannedUsers.map(handle => (
-                                      <div key={handle} className="flex items-center justify-between py-2 border-b border-twitter-border/20 last:border-0">
-                                          <div className="text-sm text-white">@{handle}</div>
-                                          <button 
-                                            onClick={() => handleUnbanUserFromCommunity(handle)}
-                                            className="text-xs text-green-500 hover:bg-green-500/10 px-2 py-1 rounded font-bold"
-                                          >
-                                              ปลดแบน
-                                          </button>
-                                      </div>
-                                  ))
-                              ) : (
-                                  <div className="text-center text-twitter-gray py-4 text-sm">ไม่มีผู้ใช้ที่ถูกแบน</div>
-                              )}
-                          </div>
-                      </div>
-                  )}
-              </div>
-          </div>
-      )}
-
-      {/* Select Badges Modal */}
-      {selectedUserForBadges && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-sm w-full">
-                  <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-bold text-white">จัดการตราสัญลักษณ์</h3>
-                      <button onClick={() => setSelectedUserForBadges(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
-                  </div>
-                  <p className="text-sm text-twitter-gray mb-4">เลือกตราสัญลักษณ์ที่ต้องการแสดงบนโปรไฟล์ของ @{selectedUserForBadges.handle}</p>
-                  
-                  <div className="grid grid-cols-5 gap-2 mb-4">
-                       {globalBadges.map((badge, i) => (
-                           badge ? (
-                               <div 
-                                   key={i} 
-                                   onClick={() => toggleUserBadge(badge)}
-                                   className={`w-12 h-12 rounded-lg border flex items-center justify-center cursor-pointer ${selectedUserForBadges.verifiedBadges?.includes(badge) ? 'border-twitter-accent bg-twitter-accent/20' : 'border-twitter-gray hover:border-white'}`}
-                               >
-                                   <img src={badge} className="w-8 h-8 object-contain" />
-                               </div>
-                           ) : (
-                               <div key={i} className="w-12 h-12 rounded-lg border border-twitter-border/30 bg-white/5 flex items-center justify-center opacity-50">
-                                   <span className="text-xs text-twitter-gray">{i+1}</span>
-                               </div>
-                           )
-                       ))}
-                  </div>
-                  <div className="text-xs text-twitter-gray">
-                      อัปโหลดตราสัญลักษณ์เพิ่มเติมในแท็บ "คลังตราสัญลักษณ์"
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* Edit User Modal */}
-      {editingUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-md w-full">
-                  <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-bold text-white">แก้ไขข้อมูลผู้ใช้</h3>
-                      <button onClick={() => setEditingUser(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                      <div>
-                          <label className="block text-xs text-twitter-gray mb-1">ชื่อที่แสดง</label>
-                          <input 
-                              value={editingUser.name}
-                              onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent"
-                          />
-                      </div>
-                      <div>
-                          <label className="block text-xs text-twitter-gray mb-1">ชื่อผู้ใช้ (Handle)</label>
-                          <input 
-                              value={editingUser.handle}
-                              onChange={(e) => setEditingUser({...editingUser, handle: e.target.value})}
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent"
-                          />
-                      </div>
-                      <div>
-                          <label className="block text-xs text-twitter-gray mb-1">อีเมล</label>
-                          <input 
-                              value={editingUser.email || ''}
-                              onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent"
-                          />
-                      </div>
-                      <div className="pt-4 border-t border-twitter-border">
-                          <label className="block text-xs text-twitter-gray mb-1">เปลี่ยนรหัสผ่าน (เว้นว่างหากไม่เปลี่ยน)</label>
-                          <input 
-                              type="password"
-                              value={newPassword}
-                              onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="ตั้งรหัสผ่านใหม่"
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white outline-none focus:border-twitter-accent"
-                          />
-                      </div>
-                      <div className="flex justify-end pt-2">
-                          <Button onClick={handleSaveUser}>บันทึกการเปลี่ยนแปลง</Button>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* Manage Premium Modal */}
+      {/* Modals */}
       {managePremiumUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
               <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-md w-full">
@@ -1234,15 +1011,21 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                           <div className="flex bg-twitter-card rounded-lg p-1">
                               <button 
                                   onClick={() => setPremiumType('individual')}
-                                  className={`flex-1 py-2 rounded text-sm font-bold ${premiumType === 'individual' ? 'bg-twitter-accent text-white' : 'text-twitter-gray hover:text-white'}`}
+                                  className={`flex-1 py-2 rounded text-sm font-bold transition-all ${premiumType === 'individual' ? 'bg-twitter-accent text-white shadow' : 'text-twitter-gray hover:text-white'}`}
                               >
                                   Individual
                               </button>
                               <button 
                                   onClick={() => setPremiumType('business')}
-                                  className={`flex-1 py-2 rounded text-sm font-bold ${premiumType === 'business' ? 'bg-twitter-accent text-white' : 'text-twitter-gray hover:text-white'}`}
+                                  className={`flex-1 py-2 rounded text-sm font-bold transition-all ${premiumType === 'business' ? 'bg-[#ffd400] text-black shadow' : 'text-twitter-gray hover:text-white'}`}
                               >
                                   Business
+                              </button>
+                              <button 
+                                  onClick={() => setPremiumType('government')}
+                                  className={`flex-1 py-2 rounded text-sm font-bold transition-all ${premiumType === 'government' ? 'bg-[#829aab] text-white shadow' : 'text-twitter-gray hover:text-white'}`}
+                              >
+                                  Gov
                               </button>
                           </div>
                       </div>
@@ -1265,7 +1048,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                           <label className="block text-xs text-twitter-gray mb-2">สิทธิพิเศษ (เลือกได้มากกว่า 1)</label>
                           <div className="max-h-40 overflow-y-auto space-y-2 border border-twitter-border rounded p-2 bg-twitter-card">
                               {premiumPrivileges
-                                  .filter(p => p.plans?.includes(premiumType))
+                                  .filter(p => p.plans?.includes(premiumType as any))
                                   .map(priv => (
                                       <label key={priv.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-1 rounded">
                                           <input 
@@ -1319,7 +1102,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                           onChange={e => setEditingPrivilege({...editingPrivilege, description: e.target.value})}
                           className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
                       />
-                      <div className="flex gap-4 text-sm text-white">
+                      <div className="flex gap-4 text-sm text-white flex-wrap">
                           <label className="flex items-center gap-2">
                               <input 
                                   type="checkbox" 
@@ -1344,6 +1127,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                                   }}
                               /> Business
                           </label>
+                          <label className="flex items-center gap-2">
+                              <input 
+                                  type="checkbox" 
+                                  checked={editingPrivilege.plans.includes('government')}
+                                  onChange={e => {
+                                      const plans = e.target.checked 
+                                          ? [...editingPrivilege.plans, 'government'] 
+                                          : editingPrivilege.plans.filter(p => p !== 'government');
+                                      setEditingPrivilege({...editingPrivilege, plans: plans as any});
+                                  }}
+                              /> Government
+                          </label>
                       </div>
                       <div className="flex justify-end gap-2 mt-4">
                           <Button variant="secondary" onClick={() => setIsAddingPrivilege(false)}>Cancel</Button>
@@ -1354,33 +1149,226 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
           </div>
       )}
 
+      {/* Badge Selection Modal */}
+      {selectedUserForBadges && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-sm w-full">
+                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-white">จัดการตราสัญลักษณ์</h3>
+                      <button onClick={() => setSelectedUserForBadges(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
+                  </div>
+                  <div className="mb-4">
+                      <p className="text-sm text-twitter-gray mb-2">ผู้ใช้: <span className="text-white font-bold">{selectedUserForBadges.name}</span></p>
+                      <div className="flex flex-wrap gap-2">
+                          {globalBadges.map((badge, i) => badge && (
+                              <div 
+                                  key={i} 
+                                  onClick={() => toggleUserBadge(badge)}
+                                  className={`border-2 rounded-lg p-2 cursor-pointer transition-all ${selectedUserForBadges.verifiedBadges?.includes(badge) ? 'border-twitter-accent bg-twitter-accent/10' : 'border-transparent bg-twitter-card'}`}
+                              >
+                                  <img src={badge} className="w-8 h-8 object-contain" />
+                              </div>
+                          ))}
+                      </div>
+                      {globalBadges.every(b => b === null) && <p className="text-twitter-gray text-xs italic">ยังไม่มีตราสัญลักษณ์ในระบบ (ไปที่แถบ Verification เพื่อเพิ่ม)</p>}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editingUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                   <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-white">แก้ไขข้อมูลผู้ใช้</h3>
+                      <button onClick={() => setEditingUser(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
+                  </div>
+                  <div className="space-y-4">
+                      <div>
+                          <label className="text-xs text-twitter-gray block mb-1">ชื่อ</label>
+                          <input 
+                              value={editingUser.name}
+                              onChange={e => setEditingUser({...editingUser, name: e.target.value})}
+                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs text-twitter-gray block mb-1">Handle (ไม่ต้องใส่ @)</label>
+                          <input 
+                              value={editingUser.handle}
+                              onChange={e => setEditingUser({...editingUser, handle: e.target.value})}
+                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs text-twitter-gray block mb-1">Bio</label>
+                          <textarea 
+                              value={editingUser.bio || ''}
+                              onChange={e => setEditingUser({...editingUser, bio: e.target.value})}
+                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white h-20"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs text-twitter-gray block mb-1">เปลี่ยนรหัสผ่าน (เว้นว่างไว้หากไม่เปลี่ยน)</label>
+                          <div className="relative">
+                            <KeyRound className="absolute left-2 top-2.5 w-4 h-4 text-twitter-gray" />
+                            <input 
+                                type="password"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                className="w-full bg-twitter-card border border-twitter-border rounded p-2 pl-8 text-white"
+                                placeholder="รหัสผ่านใหม่"
+                            />
+                          </div>
+                      </div>
+                      <div className="pt-2">
+                          <Button fullWidth onClick={handleSaveUser}>บันทึก</Button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Edit Community Modal */}
+      {editingCommunity && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-lg w-full max-h-[90vh] flex flex-col">
+                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-white">จัดการชุมชน</h3>
+                      <button onClick={() => setEditingCommunity(null)} className="text-twitter-gray hover:text-white"><X className="w-6 h-6" /></button>
+                  </div>
+                  
+                  <div className="flex gap-4 border-b border-twitter-border mb-4">
+                      <button 
+                        onClick={() => setCommunityTab('general')}
+                        className={`pb-2 px-1 text-sm font-bold ${communityTab === 'general' ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray'}`}
+                      >
+                          ข้อมูลทั่วไป
+                      </button>
+                      <button 
+                        onClick={() => setCommunityTab('members')}
+                        className={`pb-2 px-1 text-sm font-bold ${communityTab === 'members' ? 'text-twitter-accent border-b-2 border-twitter-accent' : 'text-twitter-gray'}`}
+                      >
+                          สมาชิก ({communityMembers.length})
+                      </button>
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 pr-1">
+                      {communityTab === 'general' ? (
+                          <div className="space-y-4">
+                              <div className="flex items-center gap-4">
+                                  <div className="w-20 h-20 bg-twitter-card rounded-xl overflow-hidden relative group">
+                                      <img src={editingCommunity.avatarUrl} className="w-full h-full object-cover" />
+                                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => communityAvatarInputRef.current?.click()}>
+                                          <Camera className="w-6 h-6 text-white" />
+                                      </div>
+                                      <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        ref={communityAvatarInputRef}
+                                        onChange={handleCommunityAvatarUpload}
+                                      />
+                                  </div>
+                                  <div className="flex-1">
+                                      <label className="text-xs text-twitter-gray block mb-1">ชื่อชุมชน</label>
+                                      <input 
+                                          value={editingCommunity.name}
+                                          onChange={e => setEditingCommunity({...editingCommunity, name: e.target.value})}
+                                          className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                                      />
+                                  </div>
+                              </div>
+                              <div>
+                                  <label className="text-xs text-twitter-gray block mb-1">คำอธิบาย</label>
+                                  <textarea 
+                                      value={editingCommunity.description}
+                                      onChange={e => setEditingCommunity({...editingCommunity, description: e.target.value})}
+                                      className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white h-24"
+                                  />
+                              </div>
+                              <Button fullWidth onClick={handleSaveCommunity}>บันทึกการเปลี่ยนแปลง</Button>
+                          </div>
+                      ) : (
+                          <div className="space-y-2">
+                              {communityMembers.map(member => (
+                                  <div key={member.handle} className="flex items-center justify-between p-2 border-b border-twitter-border/50">
+                                      <div className="flex items-center gap-2">
+                                          <img src={member.avatarUrl} className="w-8 h-8 rounded-full" />
+                                          <div>
+                                              <div className="text-sm font-bold text-white">{member.name}</div>
+                                              <div className="text-xs text-twitter-gray">@{member.handle}</div>
+                                          </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                          {editingCommunity.bannedUsers?.includes(member.handle) ? (
+                                              <Button size="sm" variant="outline" className="text-green-500 border-green-500" onClick={() => handleUnbanUserFromCommunity(member.handle)}>ปลดแบน</Button>
+                                          ) : (
+                                              <Button size="sm" variant="outline" className="text-red-500 border-red-500" onClick={() => handleBanUserFromCommunity(member.handle)}>แบน</Button>
+                                          )}
+                                      </div>
+                                  </div>
+                              ))}
+                              {communityMembers.length === 0 && <p className="text-center text-twitter-gray py-4">ไม่มีสมาชิก</p>}
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Edit Plan Modal */}
       {editingPlan && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-md w-full">
+              <div className="bg-black border border-twitter-border rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                   <h3 className="text-xl font-bold text-white mb-4">Edit Plan: {editingPlan.name}</h3>
                   <div className="space-y-4">
                       <div>
-                          <label className="text-xs text-twitter-gray">Price</label>
-                          <input 
-                              type="number"
-                              value={editingPlan.price}
-                              onChange={e => setEditingPlan({...editingPlan, price: parseFloat(e.target.value)})}
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
-                          />
+                           <label className="text-xs text-twitter-gray block mb-1">Display Name</label>
+                           <input 
+                               value={editingPlan.name}
+                               onChange={e => setEditingPlan({...editingPlan, name: e.target.value})}
+                               className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                           />
                       </div>
-                       <div>
-                          <label className="text-xs text-twitter-gray">Currency Symbol</label>
-                          <input 
-                              type="text"
-                              value={editingPlan.currency}
-                              onChange={e => setEditingPlan({...editingPlan, currency: e.target.value})}
-                              className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
-                          />
+                      <div className="grid grid-cols-2 gap-4">
+                           <div>
+                               <label className="text-xs text-twitter-gray block mb-1">Price</label>
+                               <input 
+                                   type="number"
+                                   value={editingPlan.price}
+                                   onChange={e => setEditingPlan({...editingPlan, price: Number(e.target.value)})}
+                                   className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                               />
+                           </div>
+                           <div>
+                               <label className="text-xs text-twitter-gray block mb-1">Currency</label>
+                               <input 
+                                   value={editingPlan.currency}
+                                   onChange={e => setEditingPlan({...editingPlan, currency: e.target.value})}
+                                   className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                               />
+                           </div>
                       </div>
-                      <div className="flex justify-end gap-2 mt-4">
+                      <div>
+                           <label className="text-xs text-twitter-gray block mb-1">Description</label>
+                           <input 
+                               value={editingPlan.description}
+                               onChange={e => setEditingPlan({...editingPlan, description: e.target.value})}
+                               className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white"
+                           />
+                      </div>
+                      <div>
+                           <label className="text-xs text-twitter-gray block mb-1">Features (comma separated)</label>
+                           <textarea 
+                               value={editingPlan.features.join(', ')}
+                               onChange={e => setEditingPlan({...editingPlan, features: e.target.value.split(',').map(s => s.trim())})}
+                               className="w-full bg-twitter-card border border-twitter-border rounded p-2 text-white h-24"
+                           />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-2">
                           <Button variant="secondary" onClick={() => setEditingPlan(null)}>Cancel</Button>
-                          <Button onClick={handleSavePlan}>Save Changes</Button>
+                          <Button onClick={handleSavePlan}>Save</Button>
                       </div>
                   </div>
               </div>

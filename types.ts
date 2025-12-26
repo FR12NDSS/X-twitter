@@ -33,7 +33,7 @@ export interface TweetData {
   videoThumbnail?: string; // New: Thumbnail URL for video posts
   hashtags?: string[]; // Support for hashtags
   isPremium?: boolean; // Show premium badge on tweet
-  premiumType?: 'individual' | 'business'; // Type of premium
+  premiumType?: 'individual' | 'business' | 'government'; // Type of premium including government
   isPromoted?: boolean; // New: Boost Post status
 }
 
@@ -93,7 +93,7 @@ export interface User {
   joinedCommunities?: string[]; // IDs of joined communities
   isAdmin?: boolean; // New Admin Flag
   isPremium?: boolean; // New Premium Flag
-  premiumType?: 'individual' | 'business'; // New: Premium Type
+  premiumType?: 'individual' | 'business' | 'government'; // New: Premium Type
   premiumSince?: string; // Date string for when they subscribed
   premiumExpiresAt?: string; // ISO Date string for expiration
   customPrivileges?: string[]; // IDs of specifically granted privileges
@@ -104,7 +104,7 @@ export enum NavigationItem {
   EXPLORE = 'Explore',
   NOTIFICATIONS = 'Notifications',
   MESSAGES = 'Messages',
-  GEMINI = 'Gemini', // AI Tab
+  GROK = 'Grok', // Rebranded from Gemini
   LISTS = 'Lists',
   BOOKMARKS = 'Bookmarks',
   COMMUNITIES = 'Communities',
