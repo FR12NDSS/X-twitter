@@ -210,7 +210,7 @@ class UserService {
       const fallbackAdmin = {
         name: 'System Admin',
         handle: 'admin',
-        email: 'admin@buzzstream.ai',
+        email: 'admin@x.com',
         password: 'password', 
         avatarUrl: 'https://ui-avatars.com/api/?name=System+Admin&background=0D8ABC&color=fff',
         bio: 'Official System Administrator',
@@ -589,7 +589,7 @@ class UserService {
     
     // Simulate sending email only if email exists
     if (newUser.email) {
-        const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
+        const siteName = this.getSiteConfig()?.siteName || 'X';
         let subject = this.emailConfig.verification.subject;
         let body = this.emailConfig.verification.body;
 
@@ -648,7 +648,7 @@ class UserService {
       }
 
       if (user.email) {
-          const siteName = this.getSiteConfig()?.siteName || 'BuzzStream';
+          const siteName = this.getSiteConfig()?.siteName || 'X';
           let subject = this.emailConfig.verification.subject;
           let body = this.emailConfig.verification.body;
 
