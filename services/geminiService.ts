@@ -20,9 +20,10 @@ const FEED_SCHEMA: Schema = {
       views: { type: Type.INTEGER, description: "Total impressions/views (should be significantly higher than likes, e.g. 1000-50000)" },
       reach: { type: Type.INTEGER, description: "Unique accounts reached (slightly lower than views)" },
       isVerified: { type: Type.BOOLEAN },
+      premiumType: { type: Type.STRING, enum: ['individual', 'business', 'government'], description: "Type of verified account. 'business' uses square avatar and gold check. 'government' uses grey check." },
       hashtags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of relevant hashtags for the post" },
     },
-    required: ["id", "authorName", "authorHandle", "content", "timestamp", "likes", "retweets", "replies", "views"],
+    required: ["id", "authorName", "authorHandle", "content", "timestamp", "likes", "retweets", "replies", "views", "isVerified"],
   },
 };
 
@@ -60,16 +61,18 @@ export const generateFeed = async (topic?: string): Promise<TweetData[]> => {
   try {
     const prompt = topic 
       ? `Generate 5 engaging social media posts in Thai language specifically about "${topic}". 
-         Make them feel authentic, varied in tone (some serious, some casual), and written by real humans.
+         Make them feel authentic, varied in tone.
+         Some users should be 'business' (companies, news orgs) or 'government' (official departments).
          Ensure the handles look realistic.
-         Generate realistic view counts (impressions) and reach stats.
-         Include relevant hashtags.`
+         Generate realistic view counts.`
       : `Generate 5 diverse and engaging social media posts in Thai language. 
          Mix topics like technology, coding humor, ai news, coffee culture, and motivation. 
+         Include a mix of user types: 
+         - Individual (Blue check)
+         - Business (Gold check, square profile) like 'TechNewsTH', 'CoffeeShopBrand'
+         - Government (Grey check) like 'DeptOfTechnology'
          Make them feel authentic and written by real humans.
-         Ensure the handles look realistic (e.g., @coder_life, @tech_guru).
-         Generate realistic view counts (impressions) that are proportionate to likes (usually 20x-100x likes).
-         Include relevant hashtags.`;
+         Generate realistic view counts (impressions) that are proportionate to likes.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -92,6 +95,8 @@ export const generateFeed = async (topic?: string): Promise<TweetData[]> => {
       views: tweet.views || tweet.likes * 50 || 1000,
       reach: tweet.reach || Math.floor((tweet.views || 1000) * 0.8),
       avatarUrl: `https://picsum.photos/seed/${tweet.authorHandle}/200/200`,
+      // Auto-assign square shape to business accounts if AI set premiumType
+      profileShape: (tweet.premiumType === 'business') ? 'square' : 'circle',
       // Assign mock images based on index to simulate variety
       images: MOCK_IMAGE_SETS[index % MOCK_IMAGE_SETS.length]
     }));

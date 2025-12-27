@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Home, Search, Bell, Mail, User, MoreHorizontal, Feather, FileText, Bookmark, Users, BadgeCheck, Settings, LogOut, Shield } from 'lucide-react';
 import { NavigationItem, User as UserType, SiteConfig } from '../types';
 import { Button } from './Button';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface SidebarProps {
   activeItem: NavigationItem;
@@ -58,6 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
     e.stopPropagation();
     onLogout();
   };
+
+  const profileShapeClass = currentUser.profileShape === 'square' ? 'rounded-md' : 'rounded-full';
 
   return (
     <div className="hidden sm:flex flex-col h-screen fixed top-0 left-0 xl:w-[275px] w-[88px] border-r border-twitter-border px-2 py-4 z-50 bg-black overflow-y-auto no-scrollbar">
@@ -142,10 +145,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onNavigate, curren
             <img 
               src={currentUser.avatarUrl} 
               alt={currentUser.name} 
-              className="w-10 h-10 rounded-full object-cover" 
+              className={`w-10 h-10 object-cover ${profileShapeClass}`}
             />
             <div className="hidden xl:block text-sm">
-              <p className="font-bold text-white">{currentUser.name}</p>
+              <div className="flex items-center gap-1">
+                  <p className="font-bold text-white">{currentUser.name}</p>
+                  <VerifiedBadge user={currentUser} className="w-3 h-3" />
+              </div>
               <p className="text-twitter-gray">@{currentUser.handle}</p>
             </div>
           </div>

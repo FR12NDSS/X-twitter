@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, MoreHorizontal, X, Hash } from 'lucide-react';
 import { Button } from './Button';
 import { MOCK_USERS } from '../utils/mockData';
+import { VerifiedBadge } from './VerifiedBadge';
 
 const POPULAR_HASHTAGS = [
     { tag: '#GeminiAI', count: '125K' },
@@ -30,7 +31,8 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick, onUserClick })
     { category: 'Sports · Trending', topic: 'Formula 1', posts: '15.6K' },
   ];
 
-  const whoToFollow = MOCK_USERS.slice(0, 3);
+  // Pick diverse users to show badges (e.g. Government, Business)
+  const whoToFollow = MOCK_USERS.filter(u => u.isVerified).slice(0, 3);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -120,9 +122,12 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick, onUserClick })
                     onClick={() => handleResultClick(user.handle)}
                     className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 transition-colors"
                   >
-                    <img src={user.avatarUrl} alt={user.handle} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={user.avatarUrl} alt={user.handle} className={`w-10 h-10 object-cover ${user.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} />
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-sm">{user.name}</span>
+                      <div className="flex items-center gap-1">
+                          <span className="font-bold text-white text-sm">{user.name}</span>
+                          <VerifiedBadge user={user} className="w-3 h-3" />
+                      </div>
                       <span className="text-twitter-gray text-sm">@{user.handle}</span>
                     </div>
                   </div>
@@ -189,9 +194,12 @@ export const RightBar: React.FC<RightBarProps> = ({ onTrendClick, onUserClick })
             onClick={() => onUserClick && onUserClick(user.handle)}
           >
              <div className="flex items-center gap-3">
-               <img src={user.avatarUrl} alt={user.handle} className="w-10 h-10 rounded-full object-cover" />
+               <img src={user.avatarUrl} alt={user.handle} className={`w-10 h-10 object-cover ${user.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} />
                <div className="flex flex-col">
-                 <span className="font-bold text-white text-sm hover:underline">{user.name}</span>
+                 <div className="flex items-center gap-1 hover:underline cursor-pointer">
+                    <span className="font-bold text-white text-sm">{user.name}</span>
+                    <VerifiedBadge user={user} className="w-3 h-3" />
+                 </div>
                  <span className="text-twitter-gray text-sm">@{user.handle}</span>
                </div>
              </div>

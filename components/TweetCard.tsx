@@ -5,7 +5,7 @@ import { MOCK_USERS } from '../utils/mockData';
 import { VerifiedBadge } from './VerifiedBadge';
 import { formatText } from '../utils/textUtils';
 import { 
-  Building, Crown, PlayCircle, CalendarClock, MoreHorizontal, Frown, 
+  PlayCircle, CalendarClock, MoreHorizontal, Frown, 
   UserMinus, UserPlus, BarChart2, MessageCircle, Repeat2, PenLine, Heart, 
   Share, Link, Bookmark, Megaphone, Undo2, Pin, Trash2
 } from 'lucide-react';
@@ -31,9 +31,6 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const [retweetsCount, setRetweetsCount] = useState(tweet.retweets);
   const [isAnimating, setIsAnimating] = useState(false);
   
-  const premiumBadgeUrl = userService.getPremiumBadgeUrl();
-  const businessBadgeUrl = userService.getBusinessBadgeUrl();
-
   // Undo State
   const [undoToast, setUndoToast] = useState<{ 
     type: 'like' | 'retweet' | 'follow', 
@@ -55,12 +52,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const moreRef = useRef<HTMLDivElement>(null);
 
   // Profile Shape Logic
-  const profileShapeClass = tweet.profileShape === 'square' ? 'rounded-xl' : 'rounded-full';
-
-  // Determine Badge
-  const isBusiness = tweet.premiumType === 'business';
-  const customBadge = isBusiness ? businessBadgeUrl : premiumBadgeUrl;
-  const DefaultStatusIcon = isBusiness ? Building : Crown;
+  const profileShapeClass = tweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full';
 
   // Pin Logic
   const isAdminPinned = tweet.isPinned && tweet.pinnedBy === 'admin';
@@ -206,7 +198,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
       if (onBookmark) onBookmark(tweet.id);
     } else if (type === 'copy') {
       try {
-        await navigator.clipboard.writeText(`https://buzzstream.ai/${tweet.authorHandle}/status/${tweet.id}`);
+        await navigator.clipboard.writeText(`https://x.com/${tweet.authorHandle}/status/${tweet.id}`);
         alert("คัดลอกลิงก์แล้ว!");
       } catch (err) {
         console.error('Failed to copy: ', err);
@@ -414,9 +406,6 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                     <div className="flex items-center gap-1 cursor-pointer hover:underline decoration-white" onClick={handleUserClickInternal}>
                         <span className="font-bold text-white truncate">{tweet.authorName}</span>
                         <VerifiedBadge user={tweet} className="w-4 h-4 flex-shrink-0" />
-                        {tweet.isPremium && (
-                            customBadge ? <img src={customBadge} className="w-3 h-3 object-contain flex-shrink-0" /> : <DefaultStatusIcon className="w-3 h-3 text-yellow-500 fill-current flex-shrink-0" />
-                        )}
                     </div>
                     <span className="text-twitter-gray truncate cursor-pointer hover:underline decoration-twitter-gray" onClick={handleUserClickInternal}>@{tweet.authorHandle}</span>
                     <span className="text-twitter-gray flex-shrink-0">·</span>
@@ -546,6 +535,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                             className={`w-5 h-5 object-cover ${tweet.quotedTweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} 
                         />
                         <span className="font-bold text-white text-sm truncate">{tweet.quotedTweet.authorName}</span>
+                        <VerifiedBadge user={tweet.quotedTweet} className="w-3 h-3" />
                         <span className="text-twitter-gray text-sm truncate">@{tweet.quotedTweet.authorHandle}</span>
                         <span className="text-twitter-gray text-sm">· {tweet.quotedTweet.timestamp}</span>
                     </div>
