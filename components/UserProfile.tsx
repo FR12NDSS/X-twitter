@@ -332,7 +332,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
     switch (activeTab) {
       case 'โพสต์':
         return (
-          <>
+          <div className="animate-in fade-in duration-300">
             {tweets.map((tweet) => (
               <TweetCard 
                 key={tweet.id} 
@@ -349,18 +349,18 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
                 ยังไม่มีโพสต์ให้แสดง
               </div>
             )}
-          </>
+          </div>
         );
       case 'การตอบกลับ':
         return (
-          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px] animate-in fade-in duration-300">
             <p className="text-xl font-bold text-white mb-2">ยังไม่มีการตอบกลับ</p>
             <p className="text-twitter-gray max-w-sm">เมื่อคุณตอบกลับโพสต์ มันจะแสดงที่นี่</p>
           </div>
         );
       case 'ไฮไลท์':
         return (
-          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px] animate-in fade-in duration-300">
             <p className="text-xl font-bold text-white mb-2">ยังไม่มีไฮไลท์</p>
             <p className="text-twitter-gray max-w-sm">ปักหมุดโพสต์โปรดของคุณไว้ที่โปรไฟล์</p>
           </div>
@@ -376,7 +376,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
 
         if (mediaContent.length === 0) {
             return (
-              <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+              <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px] animate-in fade-in duration-300">
                 <div className="w-full max-w-xs h-40 bg-twitter-card mb-6 rounded-xl flex items-center justify-center mx-auto">
                     <Camera className="w-10 h-10 text-twitter-gray" />
                 </div>
@@ -387,7 +387,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
         }
 
         return (
-            <div className="grid grid-cols-3 gap-0.5 mt-0.5">
+            <div className="grid grid-cols-3 gap-0.5 mt-0.5 animate-in fade-in duration-300">
                 {mediaContent.map((media) => (
                     <div key={media.id} className="aspect-square relative cursor-pointer bg-twitter-card group">
                         {media.isVideo ? (
@@ -408,7 +408,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, currentUser, twe
         );
       case 'ถูกใจ':
         return (
-          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
+          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[200px] animate-in fade-in duration-300">
             <p className="text-xl font-bold text-white mb-2">ยังไม่มีการกดถูกใจ</p>
             <p className="text-twitter-gray max-w-sm">แตะที่หัวใจบนโพสต์ใดก็ได้เพื่อแสดงความรัก เมื่อคุณทำเช่นนั้น มันจะแสดงที่นี่</p>
           </div>

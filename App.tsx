@@ -82,6 +82,7 @@ const App: React.FC = () => {
   // Navigation State
   const [selectedTweet, setSelectedTweet] = useState<TweetData | null>(null);
   const [viewingProfile, setViewingProfile] = useState<User | null>(null); // New state for viewing user profile
+  const [isProfileLoading, setIsProfileLoading] = useState(false); // Loading state for profile tweets
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Modal States
@@ -321,8 +322,14 @@ const App: React.FC = () => {
       const user = userService.getUser(handle);
       if (user) {
           setViewingProfile(user);
+          setIsProfileLoading(true); // Start loading animation
           setSelectedTweet(null); // Clear selected tweet if open
           window.scrollTo({ top: 0, behavior: 'smooth' });
+          
+          // Simulate fetch delay
+          setTimeout(() => {
+              setIsProfileLoading(false);
+          }, 800);
       } else {
           console.warn('User not found:', handle);
           // Optional: Fetch mock data if not in local storage?
@@ -452,7 +459,7 @@ const App: React.FC = () => {
                 currentUser={currentUser}
                 tweets={userTweets}
                 onBack={() => setViewingProfile(null)}
-                loading={false}
+                loading={isProfileLoading}
                 // No update profile here as we are viewing another user (UserProfile handles edit button visibility)
                 onReply={handleReplyClick}
                 onHashtagClick={handleTrendClick}
@@ -634,20 +641,21 @@ const App: React.FC = () => {
                 </div>
               ) : (
                 sortedTweets.map((tweet) => (
-                  <TweetCard 
-                    key={tweet.id} 
-                    tweet={tweet} 
-                    currentUser={currentUser} // Pass currentUser for admin rights check
-                    onReply={handleReplyClick} 
-                    onClick={handleViewTweet}
-                    onBookmark={handleBookmarkToggle}
-                    onQuote={handleQuoteClick}
-                    onAnalytics={handleAnalyticsClick}
-                    onHashtagClick={handleTrendClick}
-                    onUserClick={handleUserClick}
-                    onPin={handlePinTweet}
-                    onDelete={handleDeleteTweet}
-                  />
+                  <div key={tweet.id} className="animate-in fade-in slide-in-from-top-8 duration-500">
+                    <TweetCard 
+                      tweet={tweet} 
+                      currentUser={currentUser} // Pass currentUser for admin rights check
+                      onReply={handleReplyClick} 
+                      onClick={handleViewTweet}
+                      onBookmark={handleBookmarkToggle}
+                      onQuote={handleQuoteClick}
+                      onAnalytics={handleAnalyticsClick}
+                      onHashtagClick={handleTrendClick}
+                      onUserClick={handleUserClick}
+                      onPin={handlePinTweet}
+                      onDelete={handleDeleteTweet}
+                    />
+                  </div>
                 ))
               )}
               

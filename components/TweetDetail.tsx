@@ -4,6 +4,7 @@ import { TweetData, TweetComment, User } from '../types';
 import { VerifiedBadge } from './VerifiedBadge';
 import { Button } from './Button';
 import { formatText } from '../utils/textUtils';
+import { userService } from '../services/userService';
 
 interface TweetDetailProps {
   tweet: TweetData;
@@ -16,18 +17,34 @@ interface TweetDetailProps {
 }
 
 export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, onBack, onReply, onHashtagClick, onUserClick, onDelete }) => {
+  // Fetch latest user data for consistency
+  const author = userService.getUser(tweet.authorHandle);
+  
+  // Merge current user data with tweet data
+  const displayTweet = {
+      ...tweet,
+      ...(author ? {
+          authorName: author.name,
+          avatarUrl: author.avatarUrl,
+          isVerified: author.isVerified,
+          premiumType: author.premiumType,
+          verifiedBadges: author.verifiedBadges,
+          profileShape: author.profileShape
+      } : {})
+  };
+
   const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(tweet.likes);
+  const [likesCount, setLikesCount] = useState(displayTweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
-  const [retweetsCount, setRetweetsCount] = useState(tweet.retweets);
+  const [retweetsCount, setRetweetsCount] = useState(displayTweet.retweets);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
   // Use tweet.views or fallback
-  const viewCount = tweet.views || (tweet.likes * 42) || 1000;
+  const viewCount = displayTweet.views || (displayTweet.likes * 42) || 1000;
 
   // Check delete permission
-  const canDelete = currentUser && (currentUser.handle === tweet.authorHandle || currentUser.isAdmin);
+  const canDelete = currentUser && (currentUser.handle === displayTweet.authorHandle || currentUser.isAdmin);
 
   useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -63,7 +80,7 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
 
   const handleDelete = () => {
       if (confirm('คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?')) {
-          if (onDelete) onDelete(tweet.id);
+          if (onDelete) onDelete(displayTweet.id);
       }
       setShowMenu(false);
   };
@@ -106,24 +123,24 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
 
   const handleUserClickInternal = () => {
       if (onUserClick) {
-          onUserClick(tweet.authorHandle);
+          onUserClick(displayTweet.authorHandle);
       }
   };
 
   // Render images/videos grid
   const renderMedia = () => {
-    if (!tweet.images || tweet.images.length === 0) return null;
+    if (!displayTweet.images || displayTweet.images.length === 0) return null;
 
     return (
         <div className="mt-4 mb-4 grid gap-2">
-            {tweet.images.map((url, index) => (
+            {displayTweet.images.map((url, index) => (
                 <div key={index} className="rounded-2xl overflow-hidden border border-twitter-border/50 w-full">
                     {isVideo(url) ? (
                         <video 
                             src={url} 
                             className="w-full h-auto max-h-[600px] object-cover bg-black" 
                             controls 
-                            poster={tweet.videoThumbnail} // Use thumbnail if available
+                            poster={displayTweet.videoThumbnail} // Use thumbnail if available
                         />
                     ) : (
                         <img 
@@ -156,18 +173,17 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-3 cursor-pointer" onClick={handleUserClickInternal}>
             <img 
-              src={tweet.avatarUrl} 
-              alt={tweet.authorName} 
+              src={displayTweet.avatarUrl} 
+              alt={displayTweet.authorName} 
               className="w-10 h-10 rounded-full object-cover hover:opacity-80 transition-opacity"
             />
             <div className="flex flex-col">
               <div className="flex items-center gap-1 hover:underline decoration-white">
-                <span className="font-bold text-white">{tweet.authorName}</span>
-                {tweet.isVerified && (
-                  <VerifiedBadge className="w-4 h-4" />
-                )}
+                <span className="font-bold text-white">{displayTweet.authorName}</span>
+                {/* Use VerifiedBadge with displayTweet */}
+                <VerifiedBadge user={displayTweet} className="w-4 h-4" />
               </div>
-              <span className="text-twitter-gray">@{tweet.authorHandle}</span>
+              <span className="text-twitter-gray">@{displayTweet.authorHandle}</span>
             </div>
           </div>
           <div className="relative" ref={menuRef}>
@@ -197,13 +213,13 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
 
         {/* Main Content */}
         <div className="text-xl text-white whitespace-pre-wrap leading-normal mb-2">
-          {formatText(tweet.content, onHashtagClick)}
+          {formatText(displayTweet.content, onHashtagClick)}
         </div>
         
         {/* Hashtags List */}
-        {tweet.hashtags && tweet.hashtags.length > 0 && (
+        {displayTweet.hashtags && displayTweet.hashtags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2 mb-2">
-                {tweet.hashtags.map((tag, i) => (
+                {displayTweet.hashtags.map((tag, i) => (
                     <span 
                         key={i} 
                         className="text-twitter-accent hover:underline cursor-pointer font-normal text-lg"
@@ -252,7 +268,7 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
         {/* Actions Row */}
         <div className="flex justify-around border-b border-twitter-border pb-4 mb-4">
            <button 
-             onClick={() => onReply(tweet)}
+             onClick={() => onReply(displayTweet)}
              className="p-2 text-twitter-gray hover:text-twitter-accent rounded-full hover:bg-twitter-accent/10 transition-colors"
            >
              <MessageCircle className="w-5 h-5" />
@@ -281,7 +297,7 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
            </div>
            <div 
              className="text-twitter-gray text-xl cursor-text flex-1"
-             onClick={() => onReply(tweet)}
+             onClick={() => onReply(displayTweet)}
            >
              Post your reply
            </div>
@@ -290,8 +306,8 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
 
         {/* Comments List */}
         <div className="space-y-0">
-          {tweet.comments && tweet.comments.length > 0 ? (
-            tweet.comments.map((comment) => (
+          {displayTweet.comments && displayTweet.comments.length > 0 ? (
+            displayTweet.comments.map((comment) => (
               <div key={comment.id} className="border-b border-twitter-border py-3">
                 <div className="flex gap-3">
                   <img 
@@ -313,7 +329,7 @@ export const TweetDetail: React.FC<TweetDetailProps> = ({ tweet, currentUser, on
                       <span className="text-twitter-gray">{comment.timestamp}</span>
                     </div>
                     <div className="text-twitter-gray text-[13px] mb-1">
-                      Replying to <span className="text-twitter-accent cursor-pointer" onClick={() => onUserClick && onUserClick(tweet.authorHandle)}>@{tweet.authorHandle}</span>
+                      Replying to <span className="text-twitter-accent cursor-pointer" onClick={() => onUserClick && onUserClick(displayTweet.authorHandle)}>@{displayTweet.authorHandle}</span>
                     </div>
                     <p className="text-white text-[15px] mb-2">{formatText(comment.content, onHashtagClick)}</p>
                     

@@ -59,6 +59,14 @@ class UserService {
         const stored = localStorage.getItem(STORAGE_KEYS.USERS);
         if (stored) {
             this.users = JSON.parse(stored);
+            // Fix: Ensure admin user exists if it got lost or wasn't there in old data
+            if (!this.users.some(u => u.handle === 'admin')) {
+                 const adminUser = MOCK_USERS.find(u => u.handle === 'admin');
+                 if (adminUser) {
+                     this.users.unshift(adminUser);
+                     this.saveUsers();
+                 }
+            }
         } else {
             this.users = [...MOCK_USERS]; // Initialize with mock data
             this.saveUsers();

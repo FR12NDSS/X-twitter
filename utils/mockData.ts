@@ -1,6 +1,18 @@
 import { User } from '../types';
 
 export const MOCK_USERS: User[] = [
+  { 
+    name: 'System Admin', 
+    handle: 'admin', 
+    avatarUrl: 'https://ui-avatars.com/api/?name=System+Admin&background=000&color=fff', 
+    isVerified: true, 
+    isAdmin: true, 
+    isPremium: true, 
+    premiumType: 'individual', 
+    profileShape: 'circle', 
+    followers: 999999, 
+    following: 0 
+  },
   { name: 'Google DeepMind', handle: 'DeepMind', avatarUrl: 'https://picsum.photos/seed/deepmind/200/200', isVerified: true, premiumType: 'business', profileShape: 'square', followers: 1200000, following: 45 },
   { name: 'Open Source', handle: 'OpenSource', avatarUrl: 'https://picsum.photos/seed/opensource/200/200', isVerified: false, followers: 45000, following: 120 },
   { name: 'TypeScript', handle: 'typescript', avatarUrl: 'https://picsum.photos/seed/ts/200/200', isVerified: true, premiumType: 'business', profileShape: 'square', followers: 890000, following: 0 },

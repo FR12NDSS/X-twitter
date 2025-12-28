@@ -25,10 +25,40 @@ interface TweetCardProps {
 }
 
 export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onReply, onClick, onBookmark, onQuote, onAnalytics, onHashtagClick, onUserClick, onPin, onDelete }) => {
+  // Fetch latest user data to ensure badge/avatar consistency
+  const author = userService.getUser(tweet.authorHandle);
+  
+  // Merge current user data with tweet data, giving precedence to the user profile for identity fields
+  const displayTweet = {
+      ...tweet,
+      ...(author ? {
+          authorName: author.name,
+          avatarUrl: author.avatarUrl,
+          isVerified: author.isVerified,
+          premiumType: author.premiumType,
+          verifiedBadges: author.verifiedBadges,
+          profileShape: author.profileShape
+      } : {})
+  };
+
+  // Resolve Quoted Tweet Author as well
+  const quotedAuthor = displayTweet.quotedTweet ? userService.getUser(displayTweet.quotedTweet.authorHandle) : undefined;
+  const displayQuotedTweet = displayTweet.quotedTweet ? {
+      ...displayTweet.quotedTweet,
+      ...(quotedAuthor ? {
+          authorName: quotedAuthor.name,
+          avatarUrl: quotedAuthor.avatarUrl,
+          isVerified: quotedAuthor.isVerified,
+          premiumType: quotedAuthor.premiumType,
+          verifiedBadges: quotedAuthor.verifiedBadges,
+          profileShape: quotedAuthor.profileShape
+      } : {})
+  } : undefined;
+
   const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(tweet.likes);
+  const [likesCount, setLikesCount] = useState(displayTweet.likes);
   const [isRetweeted, setIsRetweeted] = useState(false);
-  const [retweetsCount, setRetweetsCount] = useState(tweet.retweets);
+  const [retweetsCount, setRetweetsCount] = useState(displayTweet.retweets);
   const [isAnimating, setIsAnimating] = useState(false);
   
   // Undo State
@@ -52,14 +82,14 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const moreRef = useRef<HTMLDivElement>(null);
 
   // Profile Shape Logic
-  const profileShapeClass = tweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full';
+  const profileShapeClass = displayTweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full';
 
   // Pin Logic
-  const isAdminPinned = tweet.isPinned && tweet.pinnedBy === 'admin';
-  const isUserPinned = tweet.isPinned && tweet.pinnedBy === 'user';
+  const isAdminPinned = displayTweet.isPinned && displayTweet.pinnedBy === 'admin';
+  const isUserPinned = displayTweet.isPinned && displayTweet.pinnedBy === 'user';
   
   // Check if user can delete (Owner or Admin)
-  const canDelete = currentUser && (currentUser.handle === tweet.authorHandle || currentUser.isAdmin);
+  const canDelete = currentUser && (currentUser.handle === displayTweet.authorHandle || currentUser.isAdmin);
 
   // Card Styling based on Pin Status
   const cardBorderClass = isAdminPinned 
@@ -117,7 +147,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
         setIsFollowing(!wasFollowed);
         
         // Revert mock data
-        const user = MOCK_USERS.find(u => u.handle.toLowerCase() === tweet.authorHandle.toLowerCase());
+        const user = MOCK_USERS.find(u => u.handle.toLowerCase() === displayTweet.authorHandle.toLowerCase());
         if (user) {
             if (user.followers === undefined) user.followers = 0;
             if (wasFollowed) {
@@ -178,7 +208,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
       }
     } else {
       if (onQuote) {
-        onQuote(tweet);
+        onQuote(displayTweet);
       }
     }
   };
@@ -195,10 +225,10 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     setShowShareMenu(false);
     
     if (type === 'bookmark') {
-      if (onBookmark) onBookmark(tweet.id);
+      if (onBookmark) onBookmark(displayTweet.id);
     } else if (type === 'copy') {
       try {
-        await navigator.clipboard.writeText(`https://x.com/${tweet.authorHandle}/status/${tweet.id}`);
+        await navigator.clipboard.writeText(`https://x.com/${displayTweet.authorHandle}/status/${displayTweet.id}`);
         alert("คัดลอกลิงก์แล้ว!");
       } catch (err) {
         console.error('Failed to copy: ', err);
@@ -221,7 +251,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     setIsFollowing(newFollowState);
     
     // Update Mock Data
-    const user = MOCK_USERS.find(u => u.handle.toLowerCase() === tweet.authorHandle.toLowerCase());
+    const user = MOCK_USERS.find(u => u.handle.toLowerCase() === displayTweet.authorHandle.toLowerCase());
     
     if (user) {
         if (!user.followers) user.followers = 1000;
@@ -240,7 +270,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const handlePinAction = (e: React.MouseEvent, type: 'user' | 'admin') => {
       e.stopPropagation();
       if (onPin) {
-          onPin(tweet.id, type);
+          onPin(displayTweet.id, type);
       }
       setShowMoreMenu(false);
   };
@@ -248,7 +278,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const handleDeleteAction = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (confirm('คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?')) {
-          if (onDelete) onDelete(tweet.id);
+          if (onDelete) onDelete(displayTweet.id);
       }
       setShowMoreMenu(false);
   };
@@ -258,7 +288,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     setShowMoreMenu(false);
     
     if (action === 'analytics') {
-      if (onAnalytics) onAnalytics(tweet);
+      if (onAnalytics) onAnalytics(displayTweet);
     } else if (action === 'follow') {
         handleFollowUser(e);
     }
@@ -267,27 +297,27 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
   const handleReplyClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onReply) {
-      onReply(tweet);
+      onReply(displayTweet);
     }
   };
 
   const handleAnalyticsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onAnalytics) {
-        onAnalytics(tweet);
+        onAnalytics(displayTweet);
     }
   };
 
   const handleCardClick = () => {
     if (onClick) {
-      onClick(tweet);
+      onClick(displayTweet);
     }
   };
 
   const handleUserClickInternal = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (onUserClick) {
-          onUserClick(tweet.authorHandle);
+          onUserClick(displayTweet.authorHandle);
       }
   };
 
@@ -305,9 +335,9 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
 
   // Helper to render image grid
   const renderImages = () => {
-    if (!tweet.images || tweet.images.length === 0) return null;
+    if (!displayTweet.images || displayTweet.images.length === 0) return null;
 
-    const count = tweet.images.length;
+    const count = displayTweet.images.length;
     
     // Helper to render media element (img or video)
     const renderMediaElement = (url: string, className: string) => {
@@ -317,7 +347,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                     <video 
                       src={url} 
                       className="w-full h-full object-cover" 
-                      poster={tweet.videoThumbnail} // Use thumbnail if available
+                      poster={displayTweet.videoThumbnail} // Use thumbnail if available
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
                         <PlayCircle className="w-12 h-12 text-white opacity-80" />
@@ -331,7 +361,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     if (count === 1) {
         return (
             <div className="mt-3 rounded-2xl overflow-hidden border border-twitter-border/50">
-                {renderMediaElement(tweet.images[0], "w-full h-auto max-h-[500px] object-cover")}
+                {renderMediaElement(displayTweet.images[0], "w-full h-auto max-h-[500px] object-cover")}
             </div>
         );
     }
@@ -339,8 +369,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     if (count === 2) {
         return (
             <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
-                {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
-                {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[0], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[1], "w-full h-full object-cover")}
             </div>
         );
     }
@@ -349,11 +379,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
         return (
             <div className="mt-3 grid grid-cols-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
                 <div className="relative">
-                    {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
+                    {renderMediaElement(displayTweet.images[0], "w-full h-full object-cover")}
                 </div>
                 <div className="grid grid-rows-2 gap-0.5 h-full">
-                    {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
-                    {renderMediaElement(tweet.images[2], "w-full h-full object-cover")}
+                    {renderMediaElement(displayTweet.images[1], "w-full h-full object-cover")}
+                    {renderMediaElement(displayTweet.images[2], "w-full h-full object-cover")}
                 </div>
             </div>
         );
@@ -362,17 +392,17 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
     if (count >= 4) {
         return (
             <div className="mt-3 grid grid-cols-2 grid-rows-2 gap-0.5 rounded-2xl overflow-hidden border border-twitter-border/50 h-[290px]">
-                {renderMediaElement(tweet.images[0], "w-full h-full object-cover")}
-                {renderMediaElement(tweet.images[1], "w-full h-full object-cover")}
-                {renderMediaElement(tweet.images[2], "w-full h-full object-cover")}
-                {renderMediaElement(tweet.images[3], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[0], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[1], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[2], "w-full h-full object-cover")}
+                {renderMediaElement(displayTweet.images[3], "w-full h-full object-cover")}
             </div>
         );
     }
   };
 
   // Ensure view count has a fallback if data is missing, but respect 0
-  const displayViews = tweet.views !== undefined ? tweet.views : (tweet.likes * 42) || 0;
+  const displayViews = displayTweet.views !== undefined ? displayTweet.views : (displayTweet.likes * 42) || 0;
 
   return (
     <>
@@ -392,8 +422,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
             {/* Avatar */}
             <div className="flex-shrink-0" onClick={handleUserClickInternal}>
             <img 
-                src={tweet.avatarUrl} 
-                alt={tweet.authorName} 
+                src={displayTweet.avatarUrl} 
+                alt={displayTweet.authorName} 
                 className={`w-10 h-10 object-cover ${profileShapeClass} hover:opacity-80 transition-opacity`}
             />
             </div>
@@ -404,19 +434,20 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-1 text-[15px] mb-1 overflow-hidden flex-wrap">
                     <div className="flex items-center gap-1 cursor-pointer hover:underline decoration-white" onClick={handleUserClickInternal}>
-                        <span className="font-bold text-white truncate">{tweet.authorName}</span>
-                        <VerifiedBadge user={tweet} className="w-4 h-4 flex-shrink-0" />
+                        <span className="font-bold text-white truncate">{displayTweet.authorName}</span>
+                        {/* Use displayTweet which contains merged user data */}
+                        <VerifiedBadge user={displayTweet} className="w-4 h-4 flex-shrink-0" />
                     </div>
-                    <span className="text-twitter-gray truncate cursor-pointer hover:underline decoration-twitter-gray" onClick={handleUserClickInternal}>@{tweet.authorHandle}</span>
+                    <span className="text-twitter-gray truncate cursor-pointer hover:underline decoration-twitter-gray" onClick={handleUserClickInternal}>@{displayTweet.authorHandle}</span>
                     <span className="text-twitter-gray flex-shrink-0">·</span>
                     
-                    {tweet.isScheduled ? (
+                    {displayTweet.isScheduled ? (
                     <div className="flex items-center gap-1 text-twitter-gray flex-shrink-0">
                         <CalendarClock className="w-3 h-3" />
-                        <span className="text-twitter-gray hover:underline">{tweet.timestamp}</span>
+                        <span className="text-twitter-gray hover:underline">{displayTweet.timestamp}</span>
                     </div>
                     ) : (
-                    <span className="text-twitter-gray hover:underline flex-shrink-0">{tweet.timestamp}</span>
+                    <span className="text-twitter-gray hover:underline flex-shrink-0">{displayTweet.timestamp}</span>
                     )}
                 </div>
 
@@ -453,7 +484,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                             )}
                             
                             {/* User Pin Option (Show if own tweet or generally available logic) */}
-                            {currentUser?.handle === tweet.authorHandle && !isAdminPinned && (
+                            {currentUser?.handle === displayTweet.authorHandle && !isAdminPinned && (
                                 <div 
                                     onClick={(e) => handlePinAction(e, 'user')}
                                     className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
@@ -475,11 +506,11 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                             >
                                 {isFollowing ? (
                                     <>
-                                        <UserMinus className="w-4 h-4" /> เลิกติดตาม @{tweet.authorHandle}
+                                        <UserMinus className="w-4 h-4" /> เลิกติดตาม @{displayTweet.authorHandle}
                                     </>
                                 ) : (
                                     <>
-                                        <UserPlus className="w-4 h-4" /> ติดตาม @{tweet.authorHandle}
+                                        <UserPlus className="w-4 h-4" /> ติดตาม @{displayTweet.authorHandle}
                                     </>
                                 )}
                             </div>
@@ -496,10 +527,10 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
 
             {/* Text */}
             <div className="text-[15px] text-white whitespace-pre-wrap leading-normal mb-1">
-                {formatText(tweet.content, onHashtagClick)}
-                {tweet.hashtags && tweet.hashtags.length > 0 && (
+                {formatText(displayTweet.content, onHashtagClick)}
+                {displayTweet.hashtags && displayTweet.hashtags.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-2 pt-1">
-                        {tweet.hashtags.map((tag, i) => (
+                        {displayTweet.hashtags.map((tag, i) => (
                             <span 
                                 key={i} 
                                 className="text-twitter-accent hover:underline cursor-pointer font-normal"
@@ -523,27 +554,27 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
             {renderImages()}
 
             {/* Quoted Tweet */}
-            {tweet.quotedTweet && (
+            {displayQuotedTweet && (
                 <div className="mt-3 mb-3 border border-twitter-border rounded-xl p-3 hover:bg-white/5 transition-colors cursor-pointer overflow-hidden" onClick={(e) => {
                     e.stopPropagation();
-                    if (onClick) onClick(tweet.quotedTweet!);
+                    if (onClick) onClick(displayQuotedTweet!);
                 }}>
                     <div className="flex items-center gap-1 mb-1">
                         <img 
-                            src={tweet.quotedTweet.avatarUrl} 
+                            src={displayQuotedTweet.avatarUrl} 
                             alt="" 
-                            className={`w-5 h-5 object-cover ${tweet.quotedTweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} 
+                            className={`w-5 h-5 object-cover ${displayQuotedTweet.profileShape === 'square' ? 'rounded-md' : 'rounded-full'}`} 
                         />
-                        <span className="font-bold text-white text-sm truncate">{tweet.quotedTweet.authorName}</span>
-                        <VerifiedBadge user={tweet.quotedTweet} className="w-3 h-3" />
-                        <span className="text-twitter-gray text-sm truncate">@{tweet.quotedTweet.authorHandle}</span>
-                        <span className="text-twitter-gray text-sm">· {tweet.quotedTweet.timestamp}</span>
+                        <span className="font-bold text-white text-sm truncate">{displayQuotedTweet.authorName}</span>
+                        <VerifiedBadge user={displayQuotedTweet} className="w-3 h-3" />
+                        <span className="text-twitter-gray text-sm truncate">@{displayQuotedTweet.authorHandle}</span>
+                        <span className="text-twitter-gray text-sm">· {displayQuotedTweet.timestamp}</span>
                     </div>
-                    <div className="text-white text-sm whitespace-pre-wrap">{formatText(tweet.quotedTweet.content, onHashtagClick)}</div>
+                    <div className="text-white text-sm whitespace-pre-wrap">{formatText(displayQuotedTweet.content, onHashtagClick)}</div>
                     {/* Render images for quoted tweet as well, but smaller/simpler */}
-                    {tweet.quotedTweet.images && tweet.quotedTweet.images.length > 0 && (
+                    {displayQuotedTweet.images && displayQuotedTweet.images.length > 0 && (
                         <div className="mt-2 rounded-lg overflow-hidden border border-twitter-border/50 h-32">
-                            <img src={tweet.quotedTweet.images[0]} className="w-full h-full object-cover" alt="" />
+                            <img src={displayQuotedTweet.images[0]} className="w-full h-full object-cover" alt="" />
                         </div>
                     )}
                 </div>
@@ -561,7 +592,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                 <div className="p-2 rounded-full group-hover:bg-twitter-accent/10 transition-colors">
                     <MessageCircle className="w-4 h-4" />
                 </div>
-                <span className="text-xs group-hover:text-twitter-accent">{formatNumber(tweet.replies)}</span>
+                <span className="text-xs group-hover:text-twitter-accent">{formatNumber(displayTweet.replies)}</span>
                 </button>
 
                 {/* Retweet */}
@@ -648,8 +679,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                                 onClick={(e) => handleShareAction(e, 'bookmark')}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 cursor-pointer font-bold text-white text-[15px]"
                             >
-                                <Bookmark className={`w-4 h-4 ${tweet.isBookmarked ? 'fill-current text-twitter-accent' : ''}`} /> 
-                                {tweet.isBookmarked ? 'ลบบุ๊กมาร์ก' : 'บุ๊กมาร์ก'}
+                                <Bookmark className={`w-4 h-4 ${displayTweet.isBookmarked ? 'fill-current text-twitter-accent' : ''}`} /> 
+                                {displayTweet.isBookmarked ? 'ลบบุ๊กมาร์ก' : 'บุ๊กมาร์ก'}
                             </div>
                         </div>
                     )}
@@ -657,7 +688,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
 
             </div>
             {/* Promoted Status Indicator */}
-            {tweet.isPromoted && (
+            {displayTweet.isPromoted && (
                 <div className="flex items-center gap-1 text-xs text-twitter-gray mt-2">
                     <Megaphone className="w-3 h-3" />
                     <span>ได้รับการโปรโมท</span>
@@ -684,7 +715,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUser, onRepl
                         {undoToast.type === 'like' && 'ถูกใจ'}
                         {undoToast.type === 'retweet' && 'รีโพสต์แล้ว'}
                         {undoToast.type === 'follow' && (
-                             undoToast.action === 'followed' ? `ติดตาม @${tweet.authorHandle} แล้ว` : `เลิกติดตาม @${tweet.authorHandle} แล้ว`
+                             undoToast.action === 'followed' ? `ติดตาม @${displayTweet.authorHandle} แล้ว` : `เลิกติดตาม @${displayTweet.authorHandle} แล้ว`
                         )}
                     </span>
                 </div>
