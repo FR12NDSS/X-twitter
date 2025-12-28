@@ -129,8 +129,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
     }
   };
 
-  const handleVerifyToggle = (handle: string) => {
-    userService.toggleVerifyUser(handle);
+  const handleVerifyCycle = (handle: string) => {
+    userService.cycleVerification(handle);
     loadData();
   };
   
@@ -532,11 +532,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                                 <td className="p-4">
                                     <div className="flex gap-2">
                                         <button 
-                                            onClick={() => handleVerifyToggle(user.handle)}
-                                            className={`p-1.5 rounded-lg transition-colors ${user.isVerified ? 'bg-blue-500/20 text-blue-500' : 'bg-gray-800 text-gray-500 hover:text-blue-500'}`}
-                                            title="Toggle Verification"
+                                            onClick={() => handleVerifyCycle(user.handle)}
+                                            className={`p-1.5 rounded-lg transition-colors bg-gray-800 hover:bg-gray-700`}
+                                            title="Cycle Verification (Blue -> Gold -> Grey -> Off)"
                                         >
-                                            <BadgeCheck className="w-4 h-4" />
+                                            {user.isVerified ? (
+                                                <VerifiedBadge user={user} className="w-4 h-4" />
+                                            ) : (
+                                                <BadgeCheck className="w-4 h-4 text-gray-500" />
+                                            )}
                                         </button>
                                         <button 
                                             onClick={() => handleProfileShapeToggle(user.handle)}
@@ -757,7 +761,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ currentUser, tweets, onDel
                                       </div>
                                   </>
                               ) : (
-                                  <div className="text-yellow-500"><BadgeCheck className="w-10 h-10 fill-current" /></div>
+                                  <div className="flex items-center justify-center">
+                                      <VerifiedBadge user={{ isVerified: true, premiumType: 'business' } as User} className="w-10 h-10" />
+                                  </div>
                               )}
                           </div>
                           <div>

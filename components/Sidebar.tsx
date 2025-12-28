@@ -12,12 +12,12 @@ interface SidebarProps {
   siteConfig: SiteConfig | null;
 }
 
-// Authentic Grok Icon (Square with slash)
+// Authentic Grok Icon (Square with forward slash)
 const GrokIcon: React.FC<{ className?: string, active?: boolean }> = ({ className, active }) => (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} ${active ? 'fill-current' : 'fill-transparent stroke-current stroke-2'}`}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <g>
             <path d="M2.5 2.5h19v19h-19z" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? '0' : '2'}></path>
-            <path d="M15.025 8.05L8.975 15.95" stroke={active ? 'black' : 'currentColor'} strokeWidth="2" strokeLinecap="square"></path>
+            <path d="M7 17L17 7" stroke={active ? 'black' : 'currentColor'} strokeWidth="2" strokeLinecap="square"></path>
         </g>
     </svg>
 );

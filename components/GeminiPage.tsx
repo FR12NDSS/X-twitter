@@ -6,7 +6,7 @@ const GrokIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className}>
         <g>
             <path d="M2.5 2.5h19v19h-19z" fill="none" stroke="currentColor" strokeWidth="2"></path>
-            <path d="M15.025 8.05L8.975 15.95" stroke="currentColor" strokeWidth="2" strokeLinecap="square"></path>
+            <path d="M7 17L17 7" stroke="currentColor" strokeWidth="2" strokeLinecap="square"></path>
         </g>
     </svg>
 );
